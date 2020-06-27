@@ -16,19 +16,4 @@
 		</xs:sequence>
 		<xs:attribute name="Name" type="xs:string" use="required"/>
 	</xs:complexType>
-	<xs:complexType name="Activity">
-		<xs:complexContent>
-			<xs:extension base="LifecycleAwareComponent">
-				<xs:sequence>
-					<xs:element name="onCreate" type="LifecycleEventHandler" maxOccurs="1" />
-					<xs:element name="onStart" type="LifecycleEventHandler" maxOccurs="1" />
-					<xs:element name="onResume" type="LifecycleEventHandler" maxOccurs="1" />
-					<xs:element name="onPause" type="LifecycleEventHandler" maxOccurs="1" />
-					<xs:element name="onStop" type="LifecycleEventHandler" maxOccurs="1" />
-					<xs:element name="onDestroy" type="LifecycleEventHandler" maxOccurs="1" />
-					<xs:element name="onRestart" type="LifecycleEventHandler" maxOccurs="1" />
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
 </xs:schema> 

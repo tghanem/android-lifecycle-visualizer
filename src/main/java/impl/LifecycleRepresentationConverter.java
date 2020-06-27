@@ -1,17 +1,17 @@
 package impl;
 
-import com.intellij.ide.plugins.PluginManager;
 import interfaces.ILifecycleRepresentationConverter;
 import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 public class LifecycleRepresentationConverter implements ILifecycleRepresentationConverter {
     @Override
@@ -27,32 +27,14 @@ public class LifecycleRepresentationConverter implements ILifecycleRepresentatio
                         .newInstance()
                         .newTransformer(transformSource);
 
-        transformer.setErrorListener(
-                new ErrorListener() {
-                    @Override
-                    public void warning(TransformerException e) throws TransformerException {
-                        PluginManager.getLogger().warn(e);
-                    }
+        StringWriter transformerResult = new StringWriter();
 
-                    @Override
-                    public void error(TransformerException e) throws TransformerException {
-                        PluginManager.getLogger().error(e);
-                    }
+        transformer.transform(new DOMSource(source), new StreamResult(transformerResult));
 
-                    @Override
-                    public void fatalError(TransformerException e) throws TransformerException {
-                        PluginManager.getLogger().error(e);
-                    }
-                });
-
-        Document result =
+        return
                 DocumentBuilderFactory
                         .newInstance()
                         .newDocumentBuilder()
-                        .newDocument();
-
-        transformer.transform(new DOMSource(source), new DOMResult(result));
-
-        return result;
+                        .parse(new InputSource(new StringReader(transformerResult.toString())));
     }
 }

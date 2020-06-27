@@ -6,17 +6,11 @@ import impl.Helper;
 import interfaces.ILifecycleProcessor;
 import interfaces.INotificationController;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 public class ActivitiesWindow {
     private JPanel mainPanel;
@@ -74,7 +68,7 @@ public class ActivitiesWindow {
                             componentElement,
                             callbackElement -> {
                                 DefaultMutableTreeNode callbackElementTreeNode =
-                                        new DefaultMutableTreeNode(componentElement.getAttribute("Name"));
+                                        new DefaultMutableTreeNode(callbackElement.getAttribute("Name"));
 
                                 componentElementTreeNode.add(callbackElementTreeNode);
                             });

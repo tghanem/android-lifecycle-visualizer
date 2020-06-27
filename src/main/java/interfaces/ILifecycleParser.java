@@ -3,6 +3,8 @@ package interfaces;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.w3c.dom.Document;
 
+import java.util.Optional;
+
 public interface ILifecycleParser {
-    Document Parse(VirtualFile lifecycleImplementation) throws Exception;
+    Optional<Document> Parse(VirtualFile lifecycleImplementation, String lifecycleComponentName) throws Exception;
 }

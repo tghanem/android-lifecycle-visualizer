@@ -9,7 +9,9 @@ import com.intellij.psi.search.GlobalSearchScope;
 import interfaces.ILifecycleParser;
 import interfaces.ILifecycleProcessor;
 import interfaces.ILifecycleRepresentationConverter;
+import javafx.util.Pair;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
@@ -17,6 +19,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class LifecycleProcessor implements ILifecycleProcessor {
     private final ILifecycleParser parser;
@@ -51,13 +54,7 @@ public class LifecycleProcessor implements ILifecycleProcessor {
         NodeList activityElements =
                 androidManifestDocument.getElementsByTagName("activity");
 
-        Document lifecycleDocument =
-                DocumentBuilderFactory
-                        .newInstance()
-                        .newDocumentBuilder()
-                        .newDocument();
-
-        List<VirtualFile> activityFiles = new ArrayList<>();
+        List<Pair<String, VirtualFile>> activityFiles = new ArrayList<>();
 
         Helper.processChildElements(
                 activityElements,
@@ -78,20 +75,42 @@ public class LifecycleProcessor implements ILifecycleProcessor {
                                     GlobalSearchScope.projectScope(project));
 
                     if (javaFiles.length > 0) {
-                        activityFiles.add(javaFiles[0].getVirtualFile());
+                        activityFiles.add(
+                                new Pair<>(activityName, javaFiles[0].getVirtualFile()));
                     }
                 });
 
-        for (VirtualFile activityFile : activityFiles) {
-            Document document = parser.Parse(activityFile);
+        Document lifecycleDocument =
+                DocumentBuilderFactory
+                        .newInstance()
+                        .newDocumentBuilder()
+                        .newDocument();
 
-            NodeList activityElementsFromParser =
-                    document.getElementsByTagName("Activity");
+        Element lifecycleRootElement =
+                lifecycleDocument.createElement("Lifecycle");
+
+        for (Pair<String, VirtualFile> activityFile : activityFiles) {
+            Optional<Document> document =
+                    parser.Parse(activityFile.getValue(), activityFile.getKey());
+
+            if (!document.isPresent()) {
+                continue;
+            }
+
+            NodeList lifecycleAwareComponentElements =
+                    document
+                            .get()
+                            .getElementsByTagName("LifecycleAwareComponent");
 
             Helper.processChildElements(
-                    activityElementsFromParser,
-                    element -> lifecycleDocument.importNode(element, true));
+                    lifecycleAwareComponentElements,
+                    element -> {
+                        lifecycleRootElement.appendChild(
+                                lifecycleDocument.importNode(element, true));
+                    });
         }
+
+        lifecycleDocument.appendChild(lifecycleRootElement);
 
         return converter.Convert(lifecycleDocument);
     }
