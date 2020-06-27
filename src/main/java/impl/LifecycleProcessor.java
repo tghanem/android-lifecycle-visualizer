@@ -2,6 +2,7 @@ package impl;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -14,6 +15,8 @@ import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LifecycleProcessor implements ILifecycleProcessor {
     private final ILifecycleParser parser;
@@ -54,6 +57,8 @@ public class LifecycleProcessor implements ILifecycleProcessor {
                         .newDocumentBuilder()
                         .newDocument();
 
+        List<VirtualFile> activityFiles = new ArrayList<>();
+
         Helper.processChildElements(
                 activityElements,
                 activityElement -> {
@@ -72,20 +77,21 @@ public class LifecycleProcessor implements ILifecycleProcessor {
                                     activityName + ".java",
                                     GlobalSearchScope.projectScope(project));
 
-                    if (javaFiles.length == 0) {
-                        return;
+                    if (javaFiles.length > 0) {
+                        activityFiles.add(javaFiles[0].getVirtualFile());
                     }
-
-                    Document document =
-                            parser.Parse(javaFiles[0].getVirtualFile());
-
-                    NodeList activityElementsFromParser =
-                            document.getElementsByTagName("activity");
-
-                    Helper.processChildElements(
-                            activityElementsFromParser,
-                            element -> lifecycleDocument.adoptNode(element));
                 });
+
+        for (VirtualFile activityFile : activityFiles) {
+            Document document = parser.Parse(activityFile);
+
+            NodeList activityElementsFromParser =
+                    document.getElementsByTagName("Activity");
+
+            Helper.processChildElements(
+                    activityElementsFromParser,
+                    element -> lifecycleDocument.importNode(element, true));
+        }
 
         return converter.Convert(lifecycleDocument);
     }
