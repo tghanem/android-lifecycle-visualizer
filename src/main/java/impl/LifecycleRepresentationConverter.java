@@ -1,11 +1,11 @@
 package impl;
 
-import com.intellij.psi.xml.XmlDocument;
 import interfaces.ILifecycleRepresentationConverter;
+import org.w3c.dom.Document;
 
 public class LifecycleRepresentationConverter implements ILifecycleRepresentationConverter {
     @Override
-    public XmlDocument Convert(XmlDocument source) {
+    public Document Convert(Document source) {
         return null;
     }
 }

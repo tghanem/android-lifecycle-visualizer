@@ -64,13 +64,13 @@ public class ActivitiesWindow {
         DefaultMutableTreeNode newRoot =
                 new DefaultMutableTreeNode("Lifecycle Components");
 
-        processChildElements(
+        Helper.processChildElements(
                 instance.getDocumentElement(),
                 componentElement -> {
                     DefaultMutableTreeNode componentElementTreeNode =
                             new DefaultMutableTreeNode(componentElement.getAttribute("Name"));
 
-                    processChildElements(
+                    Helper.processChildElements(
                             componentElement,
                             callbackElement -> {
                                 DefaultMutableTreeNode callbackElementTreeNode =
@@ -93,18 +93,6 @@ public class ActivitiesWindow {
                     content.revalidate();
                     content.repaint();
                 });
-    }
-
-    private void processChildElements(Element element, Consumer<Element> processElement) {
-        NodeList childNodeList = element.getChildNodes();
-
-        for (int i = 0; i < childNodeList.getLength(); i++) {
-            Node node = childNodeList.item(i);
-
-            if (node instanceof Element) {
-                processElement.accept((Element) node);
-            }
-        }
     }
 
     private void Render(Exception exception) {

@@ -1,7 +1,7 @@
 package interfaces;
 
-import com.intellij.psi.xml.XmlDocument;
+import org.w3c.dom.Document;
 
 public interface ILifecycleRepresentationConverter {
-    XmlDocument Convert(XmlDocument source);
+    Document Convert(Document source);
 }

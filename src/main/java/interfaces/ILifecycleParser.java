@@ -1,8 +1,8 @@
 package interfaces;
 
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.xml.XmlDocument;
+import org.w3c.dom.Document;
 
 public interface ILifecycleParser {
-    XmlDocument Parse(VirtualFile lifecycleImplementation);
+    Document Parse(VirtualFile lifecycleImplementation);
 }

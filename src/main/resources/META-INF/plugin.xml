@@ -14,7 +14,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow
             id="Activities Navigator"
-            anchor="right"
+            anchor="bottom"
             factoryClass="windows.WindowFactory"/>
     </extensions>
 
