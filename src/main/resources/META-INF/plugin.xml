@@ -15,8 +15,7 @@
         <toolWindow
             id="Activities Navigator"
             anchor="right"
-            factoryClass="windows.WindowFactory"
-        />
+            factoryClass="windows.WindowFactory"/>
     </extensions>
 
     <actions>

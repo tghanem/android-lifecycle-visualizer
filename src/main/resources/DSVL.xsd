@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:complexType name="Node">
+		<xs:attribute name="FullName" type="xs:string" use="required"/>
+		<xs:attribute name="Name" type="xs:string" use="required" />	
+	</xs:complexType>
+	<xs:complexType name="Callback">
+		<xs:complexContent>
+			<xs:extension base="Node"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="Component">
+		<xs:complexContent>
+			<xs:extension base="Node">
+				<xs:sequence>
+					<xs:element name="Callback" type="Callback" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+</xs:schema> 
