@@ -10,6 +10,7 @@
             <xsl:attribute name="Name">
                 <xsl:value-of select="@Name"/>
             </xsl:attribute>
+            <xsl:attribute name="Icon">handler.png</xsl:attribute>
         </Callback>
     </xsl:template>
 
@@ -21,12 +22,15 @@
             <xsl:attribute name="Name">
                 <xsl:value-of select="@Name"/>
             </xsl:attribute>
+            <xsl:attribute name="Icon">component.png</xsl:attribute>
             <xsl:apply-templates select="LifecycleEventHandler" />
         </Component>
     </xsl:template>
 
     <xsl:template match="Lifecycle">
         <Lifecycle>
+            <xsl:attribute name="Icon">root.png</xsl:attribute>
+            <xsl:attribute name="Name">Lifecycle</xsl:attribute>
             <xsl:apply-templates select="LifecycleAwareComponent" />
         </Lifecycle>
     </xsl:template>

@@ -3,6 +3,7 @@ package windows;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import impl.Helper;
+import impl.LifecycleTreeCellRenderer;
 import interfaces.ILifecycleProcessor;
 import interfaces.INotificationController;
 import org.w3c.dom.Document;
@@ -45,6 +46,9 @@ public class ActivitiesWindow {
                             }
                         }));
 
+        lifecycleComponents.setCellRenderer(
+                new LifecycleTreeCellRenderer());
+
         this.project = project;
         this.processor = processor;
         this.notificationController = notificationController;
@@ -56,19 +60,19 @@ public class ActivitiesWindow {
 
     private void Render(Document instance) {
         DefaultMutableTreeNode newRoot =
-                new DefaultMutableTreeNode("Lifecycle Components");
+                new DefaultMutableTreeNode(instance.getDocumentElement());
 
         Helper.processChildElements(
                 instance.getDocumentElement(),
                 componentElement -> {
                     DefaultMutableTreeNode componentElementTreeNode =
-                            new DefaultMutableTreeNode(componentElement.getAttribute("Name"));
+                            new DefaultMutableTreeNode(componentElement);
 
                     Helper.processChildElements(
                             componentElement,
                             callbackElement -> {
                                 DefaultMutableTreeNode callbackElementTreeNode =
-                                        new DefaultMutableTreeNode(callbackElement.getAttribute("Name"));
+                                        new DefaultMutableTreeNode(callbackElement);
 
                                 componentElementTreeNode.add(callbackElementTreeNode);
                             });
