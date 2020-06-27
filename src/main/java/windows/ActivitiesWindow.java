@@ -1,6 +1,8 @@
 package windows;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import impl.Helper;
 import interfaces.ILifecycleProcessor;
 import interfaces.INotificationController;
 import org.w3c.dom.Document;
@@ -59,10 +61,8 @@ public class ActivitiesWindow {
     }
 
     private void Render(Document instance) {
-        DefaultTreeModel model = (DefaultTreeModel) lifecycleComponents.getModel();
-
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-        root.removeAllChildren();
+        DefaultMutableTreeNode newRoot =
+                new DefaultMutableTreeNode("Lifecycle Components");
 
         processChildElements(
                 instance.getDocumentElement(),
@@ -79,15 +79,20 @@ public class ActivitiesWindow {
                                 componentElementTreeNode.add(callbackElementTreeNode);
                             });
 
-                    root.add(componentElementTreeNode);
+                    newRoot.add(componentElementTreeNode);
                 });
 
-        model.reload();
+        ApplicationManager.getApplication().invokeLater(
+                () -> {
+                    DefaultTreeModel model = (DefaultTreeModel) lifecycleComponents.getModel();
+                    model.setRoot(newRoot);
+                    model.reload();
 
-        content.removeAll();
-        content.add(lifecycleComponents);
-        content.revalidate();
-        content.repaint();
+                    content.removeAll();
+                    content.add(lifecycleComponents);
+                    content.revalidate();
+                    content.repaint();
+                });
     }
 
     private void processChildElements(Element element, Consumer<Element> processElement) {
@@ -103,28 +108,18 @@ public class ActivitiesWindow {
     }
 
     private void Render(Exception exception) {
-        try {
-            exceptionInformation.setText(getExceptionInformation(exception));
+        ApplicationManager.getApplication().invokeLater(
+                () -> {
+                    try {
+                        exceptionInformation.setText(Helper.getExceptionInformation(exception));
 
-            content.removeAll();
-            content.add(exceptionInformation);
-            content.revalidate();
-            content.repaint();
-        } catch (Exception fatalException) {
-            notificationController.Notify(fatalException);
-        }
-    }
-
-    private String getExceptionInformation(Exception exception) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(exception.getClass().toString() + ": " + exception.getMessage());
-        sb.append(System.lineSeparator());
-
-        StringWriter sw = new StringWriter();
-        exception.printStackTrace(new PrintWriter(sw));
-        sb.append(sw.toString());
-
-        return sb.toString();
+                        content.removeAll();
+                        content.add(exceptionInformation);
+                        content.revalidate();
+                        content.repaint();
+                    } catch (Exception fatalException) {
+                        notificationController.Notify(fatalException);
+                    }
+                });
     }
 }
