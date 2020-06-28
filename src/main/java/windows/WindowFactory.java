@@ -6,10 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
-import impl.LifecycleParser;
-import impl.LifecycleProcessor;
-import impl.LifecycleRepresentationConverter;
-import impl.NotificationController;
+import impl.*;
 import org.jetbrains.annotations.NotNull;
 
 public class WindowFactory implements ToolWindowFactory {
@@ -21,6 +18,7 @@ public class WindowFactory implements ToolWindowFactory {
                         new LifecycleProcessor(
                                 new LifecycleParser(),
                                 new LifecycleRepresentationConverter()),
+                        new LifecycleComponentsProvider(),
                         new NotificationController(
                                 new NotificationGroup(
                                         "Activities Visualizer Errors",

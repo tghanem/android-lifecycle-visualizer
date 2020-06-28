@@ -2,15 +2,19 @@ package windows;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import impl.Helper;
 import impl.LifecycleTreeCellRenderer;
+import interfaces.ILifecycleComponentsProvider;
 import interfaces.ILifecycleProcessor;
 import interfaces.INotificationController;
+import javafx.util.Pair;
 import org.w3c.dom.Document;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class ActivitiesWindow {
@@ -24,33 +28,45 @@ public class ActivitiesWindow {
 
     private final Project project;
     private final ILifecycleProcessor processor;
+    private final ILifecycleComponentsProvider lifecycleComponentsProvider;
     private final INotificationController notificationController;
 
     public ActivitiesWindow(
             Project project,
             ILifecycleProcessor processor,
+            ILifecycleComponentsProvider lifecycleComponentsProvider,
             INotificationController notificationController) {
 
         exceptionInformation = new JTextArea();
 
         refresh.addActionListener(
-                actionEvent -> CompletableFuture.runAsync(
-                        () -> {
-                            try {
-                                refresh.setEnabled(false);
-                                Render(processor.Process(project));
-                            } catch (Exception exception) {
-                                Render(exception);
-                            } finally {
-                                refresh.setEnabled(true);
-                            }
-                        }));
+                actionEvent -> {
+                    try {
+                        List<Pair<String, VirtualFile>> lifecycleComponentsFiles =
+                                lifecycleComponentsProvider.getLifecycleComponents(project);
+
+                        CompletableFuture.runAsync(
+                                () -> {
+                                    try {
+                                        refresh.setEnabled(false);
+                                        Render(processor.Process(lifecycleComponentsFiles));
+                                    } catch (Exception exception) {
+                                        Render(exception);
+                                    } finally {
+                                        refresh.setEnabled(true);
+                                    }
+                                });
+                    } catch (Exception e) {
+                        Render(e);
+                    }
+                });
 
         lifecycleComponents.setCellRenderer(
                 new LifecycleTreeCellRenderer());
 
         this.project = project;
         this.processor = processor;
+        this.lifecycleComponentsProvider = lifecycleComponentsProvider;
         this.notificationController = notificationController;
     }
 
