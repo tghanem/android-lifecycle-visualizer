@@ -18,12 +18,19 @@ public class LifecycleTreeCellRenderer implements TreeCellRenderer {
             int i,
             boolean b3) {
 
-        Object userObject = ((DefaultMutableTreeNode) o).getUserObject();
+        DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) o;
+        Object userObject = treeNode.getUserObject();
 
         if (userObject instanceof Element) {
             Element userObjectElement = (Element) userObject;
 
-            JLabel label = new JLabel(userObjectElement.getAttribute("Name"));
+            JLabel label;
+
+            if (treeNode.getParent() == null) {
+                label = new JLabel(userObjectElement.getAttribute("ApplicationName"));
+            } else {
+                label = new JLabel(userObjectElement.getAttribute("Name"));
+            }
 
             label.setIcon(
                     new ImageIcon(
@@ -32,8 +39,8 @@ public class LifecycleTreeCellRenderer implements TreeCellRenderer {
                                     .getResource(userObjectElement.getAttribute("Icon"))));
 
             return label;
+        } else {
+            return new JLabel(userObject.toString());
         }
-
-        return new JLabel(userObject.toString());
     }
 }

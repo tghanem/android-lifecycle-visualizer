@@ -49,7 +49,7 @@ public class ActivitiesWindow {
                                 () -> {
                                     try {
                                         refresh.setEnabled(false);
-                                        Render(processor.Process(lifecycleComponentsFiles));
+                                        Render(processor.Process(project.getName(), lifecycleComponentsFiles));
                                     } catch (Exception exception) {
                                         Render(exception);
                                     } finally {

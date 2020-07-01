@@ -26,7 +26,10 @@ public class LifecycleProcessor implements ILifecycleProcessor {
     }
 
     @Override
-    public Document Process(List<Pair<String, VirtualFile>> lifecycleComponentsFiles) throws Exception {
+    public Document Process(
+            String applicationName,
+            List<Pair<String, VirtualFile>> lifecycleComponentsFiles) throws Exception {
+
         Document lifecycleDocument =
                 DocumentBuilderFactory
                         .newInstance()
@@ -34,7 +37,9 @@ public class LifecycleProcessor implements ILifecycleProcessor {
                         .newDocument();
 
         Element lifecycleRootElement =
-                lifecycleDocument.createElement("Lifecycle");
+                lifecycleDocument.createElement("ApplicationLifecycle");
+
+        lifecycleRootElement.setAttribute("ApplicationName", applicationName);
 
         for (Pair<String, VirtualFile> activityFile : lifecycleComponentsFiles) {
             Optional<Document> document =
