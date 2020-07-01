@@ -19,8 +19,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class ActivitiesWindow {
     private JPanel mainPanel;
-    private JPanel controls;
     private JPanel content;
+    private JPanel controls;
     private JButton refresh;
 
     private JTree lifecycleComponents;
