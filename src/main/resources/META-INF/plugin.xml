@@ -3,6 +3,8 @@
     <name>Android Lifecycle Visualizer</name>
     <vendor email="timothy.ghanim@gmail.com" url="http://www.birzeit.edu">Birzeit University</vendor>
 
+    <depends>com.intellij.modules.platform</depends>
+
     <description>
         A plugin that allows visualizing Android Activities and the implemented lifecycle callback methods.
     </description>
