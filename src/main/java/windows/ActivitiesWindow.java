@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import impl.Helper;
 import impl.LifecycleTreeCellRenderer;
+import impl.exceptions.InformationalException;
 import interfaces.ILifecycleComponentsProvider;
 import interfaces.ILifecycleProcessor;
 import interfaces.INotificationController;
@@ -56,6 +57,8 @@ public class ActivitiesWindow {
                                         refresh.setEnabled(true);
                                     }
                                 });
+                    } catch (InformationalException e) {
+                        Render(e.getMessage());
                     } catch (Exception e) {
                         Render(e);
                     }
@@ -110,10 +113,14 @@ public class ActivitiesWindow {
     }
 
     private void Render(Exception exception) {
+        Render(Helper.getExceptionInformation(exception));
+    }
+
+    private void Render(String information) {
         ApplicationManager.getApplication().invokeLater(
                 () -> {
                     try {
-                        exceptionInformation.setText(Helper.getExceptionInformation(exception));
+                        exceptionInformation.setText(information);
 
                         content.removeAll();
                         content.add(exceptionInformation);

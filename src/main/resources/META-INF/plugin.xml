@@ -7,15 +7,14 @@
         A plugin that allows visualizing Android Activities and the implemented lifecycle callback methods.
     </description>
 
-    <depends>com.intellij.modules.platform</depends>
+    <change-notes>
+        Initial release of the plugin for testing purposes.
+    </change-notes>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow
-            id="Activities Navigator"
-            anchor="bottom"
-            factoryClass="windows.WindowFactory"/>
+                anchor="bottom"
+                factoryClass="windows.WindowFactory"
+                id="Activities Navigator" />
     </extensions>
-
-    <actions>
-    </actions>
 </idea-plugin>

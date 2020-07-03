@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import impl.exceptions.InformationalException;
 import interfaces.ILifecycleComponentsProvider;
 import javafx.util.Pair;
 import org.w3c.dom.Document;
@@ -16,25 +17,25 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class LifecycleComponentsProvider implements ILifecycleComponentsProvider {
     @Override
     public List<Pair<String, VirtualFile>> getLifecycleComponents(Project project) throws Exception {
-        PsiFile[] files =
-                FilenameIndex.getFilesByName(
-                        project,
-                        "AndroidManifest.xml",
-                        GlobalSearchScope.projectScope(project));
+        Optional<PsiFile> androidManifestFile =
+                Helper.findAndroidManifestFile(project);
 
-        if (files.length == 0) {
-            throw new Exception("AndroidManifest.xml is missing");
+        if (!androidManifestFile.isPresent()) {
+            throw new InformationalException("AndroidManifest.xml file does not exist");
         }
 
         Document androidManifestDocument =
                 DocumentBuilderFactory
                         .newInstance()
                         .newDocumentBuilder()
-                        .parse(new InputSource(new StringReader(VfsUtil.loadText(files[0].getVirtualFile()))));
+                        .parse(
+                                new InputSource(
+                                        new StringReader(VfsUtil.loadText(androidManifestFile.get().getVirtualFile()))));
 
         NodeList activityElements =
                 androidManifestDocument.getElementsByTagName("activity");

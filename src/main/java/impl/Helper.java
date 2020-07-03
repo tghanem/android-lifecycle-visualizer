@@ -1,11 +1,16 @@
 package impl;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class Helper {
@@ -35,5 +40,19 @@ public class Helper {
                 processElement.accept((Element) node);
             }
         }
+    }
+
+    public static Optional<PsiFile> findAndroidManifestFile(Project project) {
+        PsiFile[] files =
+                FilenameIndex.getFilesByName(
+                        project,
+                        "AndroidManifest.xml",
+                        GlobalSearchScope.projectScope(project));
+
+        if (files.length > 0) {
+            return Optional.of(files[0]);
+        }
+
+        return Optional.empty();
     }
 }
