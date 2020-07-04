@@ -12,7 +12,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -30,11 +29,6 @@ public class Helper {
         return sb.toString();
     }
 
-    public static void processChildElements(Element element, Consumer<Element> processElement) {
-        NodeList childNodeList = element.getChildNodes();
-        processChildElements(childNodeList, processElement);
-    }
-
     public static Optional<Element> findFirst(NodeList nodeList, Predicate<Element> predicate) {
         AtomicReference<Optional<Element>> result = new AtomicReference<>(Optional.empty());
 
@@ -49,15 +43,6 @@ public class Helper {
                 });
 
         return result.get();
-    }
-
-    public static void processChildElements(NodeList nodeList, Consumer<Element> processElement) {
-        processChildElements(
-                nodeList,
-                element -> {
-                    processElement.accept(element);
-                    return true;
-                });
     }
 
     private static void processChildElements(NodeList nodeList, Function<Element, Boolean> processElement) {

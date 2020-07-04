@@ -6,6 +6,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.vfs.VirtualFile;
 import interfaces.IFileProcessor;
+import interfaces.INotificationService;
 import org.jetbrains.annotations.NotNull;
 
 public class FileOpenListener implements FileEditorManagerListener {
@@ -16,7 +17,9 @@ public class FileOpenListener implements FileEditorManagerListener {
                     .getService(IFileProcessor.class)
                     .setCurrentlyOpenedFile(source.getProject(), file);
         } catch (Exception e) {
-            e.printStackTrace();
+            ServiceManager
+                    .getService(INotificationService.class)
+                    .notify(source.getProject(), e);
         }
     }
 
@@ -27,7 +30,9 @@ public class FileOpenListener implements FileEditorManagerListener {
                     .getService(IFileProcessor.class)
                     .setCurrentlyOpenedFile(event.getManager().getProject(), event.getNewFile());
         } catch (Exception e) {
-            e.printStackTrace();
+            ServiceManager
+                    .getService(INotificationService.class)
+                    .notify(event.getManager().getProject(), e);
         }
     }
 }

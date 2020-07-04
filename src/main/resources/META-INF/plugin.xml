@@ -36,5 +36,9 @@
         <applicationService
                 serviceInterface="interfaces.IActivityViewService"
                 serviceImplementation="impl.services.ActivityViewService"/>
+
+        <applicationService
+                serviceInterface="interfaces.INotificationService"
+                serviceImplementation="impl.services.NotificationService"/>
     </extensions>
 </idea-plugin>
