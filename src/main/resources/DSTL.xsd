@@ -18,11 +18,4 @@
 		</xs:sequence>
 		<xs:attribute name="Name" type="xs:string" use="required"/>
 	</xs:complexType>
-
-	<xs:complexType name="ApplicationLifecycle">
-		<xs:sequence>
-			<xs:element name="LifecycleAwareComponent" type="LifecycleAwareComponent" minOccurs="1" maxOccurs="unbounded" />
-		</xs:sequence>
-		<xs:attribute name="ApplicationName" type="xs:string" use="required" />
-	</xs:complexType>
 </xs:schema> 

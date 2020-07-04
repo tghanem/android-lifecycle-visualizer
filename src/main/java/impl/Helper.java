@@ -11,7 +11,10 @@ import org.w3c.dom.NodeList;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Helper {
     public static String getExceptionInformation(Exception exception) {
@@ -32,12 +35,39 @@ public class Helper {
         processChildElements(childNodeList, processElement);
     }
 
+    public static Optional<Element> findFirst(NodeList nodeList, Predicate<Element> predicate) {
+        AtomicReference<Optional<Element>> result = new AtomicReference<>(Optional.empty());
+
+        processChildElements(
+                nodeList,
+                element -> {
+                    if (predicate.test(element)) {
+                        result.set(Optional.of(element));
+                        return false;
+                    }
+                    return true;
+                });
+
+        return result.get();
+    }
+
     public static void processChildElements(NodeList nodeList, Consumer<Element> processElement) {
+        processChildElements(
+                nodeList,
+                element -> {
+                    processElement.accept(element);
+                    return true;
+                });
+    }
+
+    private static void processChildElements(NodeList nodeList, Function<Element, Boolean> processElement) {
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
 
             if (node instanceof Element) {
-                processElement.accept((Element) node);
+                if (!processElement.apply((Element)node)) {
+                    break;
+                }
             }
         }
     }

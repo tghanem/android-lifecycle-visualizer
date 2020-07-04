@@ -14,10 +14,27 @@
         Initial release of the plugin for testing purposes.
     </change-notes>
 
+    <applicationListeners>
+        <listener class="impl.listeners.FileOpenListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener" />
+    </applicationListeners>
+
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow
                 anchor="bottom"
                 factoryClass="windows.WindowFactory"
                 id="Activities Navigator" />
+
+        <applicationService
+                serviceInterface="interfaces.IActivityFileProcessor"
+                serviceImplementation="impl.services.ActivityFileProcessorService"/>
+
+        <applicationService
+                serviceInterface="interfaces.IFileProcessor"
+                serviceImplementation="impl.services.FileProcessorService" />
+
+        <applicationService
+                serviceInterface="interfaces.IActivityViewService"
+                serviceImplementation="impl.services.ActivityViewService"/>
     </extensions>
 </idea-plugin>

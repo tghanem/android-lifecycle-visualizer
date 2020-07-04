@@ -7,24 +7,25 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.intellij.openapi.vfs.VirtualFile;
-import interfaces.ILifecycleParser;
+import interfaces.IActivityFileParser;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static com.intellij.openapi.vfs.VfsUtilCore.loadText;
 
-public class LifecycleParser implements ILifecycleParser {
+public class ActivityFileParser implements IActivityFileParser {
     private static final List<String> callbacks =
             Arrays.asList("onCreate", "onStart", "onResume", "onPause", "onStop", "onDestroy");
 
     @Override
-    public Optional<Document> Parse(VirtualFile lifecycleImplementation, String lifecycleComponentName) throws Exception {
+    public Optional<Document> parse(VirtualFile lifecycleImplementation) throws Exception {
         CompilationUnit parseResult =
                 StaticJavaParser.parse(loadText(lifecycleImplementation));
 
@@ -38,7 +39,7 @@ public class LifecycleParser implements ILifecycleParser {
                 document.createElement("LifecycleAwareComponent");
 
         Optional<ClassOrInterfaceDeclaration> lifecycleComponentClassDeclaration =
-                parseResult.getClassByName(lifecycleComponentName);
+                getActivityClass(parseResult);
 
         if (!lifecycleComponentClassDeclaration.isPresent()) {
             return Optional.empty();
@@ -72,6 +73,24 @@ public class LifecycleParser implements ILifecycleParser {
         document.appendChild(lifecycleAwareComponentElement);
 
         return Optional.of(document);
+    }
+
+    private Optional<ClassOrInterfaceDeclaration> getActivityClass(CompilationUnit parseResult) {
+        List<ClassOrInterfaceDeclaration> classes = new ArrayList<>();
+
+        new VoidVisitorAdapter<Object>() {
+            @Override
+            public void visit(ClassOrInterfaceDeclaration n, Object arg) {
+                super.visit(n, arg);
+                classes.add(n);
+            }
+        }.visit(parseResult, null);
+
+        if (classes.size() > 0) {
+            return Optional.of(classes.get(0));
+        }
+
+        return Optional.empty();
     }
 
     private Element toLifecycleEventHandlerElement(MethodDeclaration declaration, Document document, String fileName) {

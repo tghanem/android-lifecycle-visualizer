@@ -26,14 +26,4 @@
             <xsl:apply-templates select="LifecycleEventHandler" />
         </Component>
     </xsl:template>
-
-    <xsl:template match="ApplicationLifecycle">
-        <ApplicationLifecycle>
-            <xsl:attribute name="Icon">root.png</xsl:attribute>
-            <xsl:attribute name="ApplicationName">
-                <xsl:value-of select="@ApplicationName" />
-            </xsl:attribute>
-            <xsl:apply-templates select="LifecycleAwareComponent" />
-        </ApplicationLifecycle>
-    </xsl:template>
 </xsl:stylesheet>

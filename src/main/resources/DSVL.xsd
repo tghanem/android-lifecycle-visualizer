@@ -21,12 +21,4 @@
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
-
-	<xs:complexType name="ApplicationLifecycle">
-		<xs:sequence>
-			<xs:element name="Component" type="Component" minOccurs="1" maxOccurs="unbounded" />
-		</xs:sequence>
-		<xs:attribute name="Icon" type="xs:string" use="required" />
-		<xs:attribute name="ApplicationName" type="xs:string" use="required" />
-	</xs:complexType>
 </xs:schema> 
