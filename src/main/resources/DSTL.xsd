@@ -1,20 +1,36 @@
 <?xml version="1.0"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:complexType name="SymbolLocation">
+	<xs:complexType name="Location">
 		<xs:attribute name="FileName" type="xs:string" use="required"/>
 		<xs:attribute name="LineNumber" type="xs:positiveInteger" use="required" />
 	</xs:complexType>
 
-	<xs:complexType name="LifecycleEventHandler">		
+	<xs:complexType name="ResourceAcquisition">
 		<xs:sequence>
-			<xs:element name="Location" type="SymbolLocation" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Location" type="Location" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="ResourceName" type="xs:string" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="ResourceRelease">
+		<xs:sequence>
+			<xs:element name="Location" type="Location" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="ResourceName" type="xs:string" use="required"/>
+	</xs:complexType>
+
+	<xs:complexType name="LifecycleEventHandler">
+		<xs:sequence>
+			<xs:element name="Location" type="Location" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ResourceAcquisition" type="ResourceAcquisition" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ResourceRelease" type="ResourceAcquisition" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="Name" type="xs:string" use="required"/>
 	</xs:complexType>
 
 	<xs:complexType name="LifecycleAwareComponent">
 		<xs:sequence>
-			<xs:element name="Location" type="SymbolLocation" minOccurs="1" maxOccurs="1" />
+			<xs:element name="Location" type="Location" minOccurs="1" maxOccurs="1" />
 		</xs:sequence>
 		<xs:attribute name="Name" type="xs:string" use="required"/>
 	</xs:complexType>

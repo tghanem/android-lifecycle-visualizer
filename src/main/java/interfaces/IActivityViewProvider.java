@@ -1,7 +1,7 @@
 package interfaces;
 
-import org.w3c.dom.Document;
+import impl.dsvl.LifecycleNode;
 
 public interface IActivityViewProvider {
-    void display(Document viewDocument);
+    void display(LifecycleNode viewDocument);
 }

@@ -1,8 +1,7 @@
 package windows;
 
+import impl.dsvl.LifecycleNode;
 import interfaces.IActivityViewProvider;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import javax.swing.*;
 
@@ -21,8 +20,7 @@ public class ActivityForm implements IActivityViewProvider {
     private JLabel activityShutdownLabel;
 
     @Override
-    public void display(Document viewDocument) {
-        Element root = viewDocument.getDocumentElement();
+    public void display(LifecycleNode viewDocument) {
     }
 
     public JPanel getContent() {

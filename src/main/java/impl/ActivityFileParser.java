@@ -7,11 +7,10 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.intellij.openapi.vfs.VirtualFile;
+import impl.model.dstl.LifecycleAwareComponent;
+import impl.model.dstl.LifecycleEventHandler;
+import impl.model.dstl.Location;
 import interfaces.IActivityFileParser;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,18 +24,9 @@ public class ActivityFileParser implements IActivityFileParser {
             Arrays.asList("onCreate", "onStart", "onResume", "onPause", "onStop", "onDestroy");
 
     @Override
-    public Optional<Document> parse(VirtualFile lifecycleImplementation) throws Exception {
+    public Optional<LifecycleAwareComponent> parse(VirtualFile lifecycleImplementation) throws Exception {
         CompilationUnit parseResult =
                 StaticJavaParser.parse(loadText(lifecycleImplementation));
-
-        Document document =
-                DocumentBuilderFactory
-                        .newInstance()
-                        .newDocumentBuilder()
-                        .newDocument();
-
-        Element lifecycleAwareComponentElement =
-                document.createElement("LifecycleAwareComponent");
 
         Optional<ClassOrInterfaceDeclaration> lifecycleComponentClassDeclaration =
                 getActivityClass(parseResult);
@@ -45,18 +35,8 @@ public class ActivityFileParser implements IActivityFileParser {
             return Optional.empty();
         }
 
-        lifecycleAwareComponentElement.setAttribute(
-                "Name",
-                lifecycleComponentClassDeclaration.get().getNameAsString());
-
-        lifecycleAwareComponentElement.appendChild(
-                toLocationElement(
-                        lifecycleComponentClassDeclaration
-                                .get()
-                                .getRange()
-                                .get(),
-                        document,
-                        lifecycleImplementation.getName()));
+        List<LifecycleEventHandler> lifecycleEventHandlers =
+                new ArrayList<>();
 
         new VoidVisitorAdapter<Object>() {
             @Override
@@ -64,15 +44,22 @@ public class ActivityFileParser implements IActivityFileParser {
                 super.visit(n, arg);
 
                 if (callbacks.contains(n.getName().asString())) {
-                    lifecycleAwareComponentElement.appendChild(
-                            toLifecycleEventHandlerElement(n, document, lifecycleImplementation.getName()));
+                    lifecycleEventHandlers.add(
+                            toLifecycleEventHandler(n, lifecycleImplementation.getName()));
                 }
             }
         }.visit(parseResult, null);
 
-        document.appendChild(lifecycleAwareComponentElement);
-
-        return Optional.of(document);
+        return
+                Optional.of(
+                        new LifecycleAwareComponent(
+                                toLocation(
+                                        lifecycleComponentClassDeclaration
+                                                .get()
+                                                .getRange()
+                                                .get(),
+                                        lifecycleImplementation.getName()),
+                                lifecycleEventHandlers));
     }
 
     private Optional<ClassOrInterfaceDeclaration> getActivityClass(CompilationUnit parseResult) {
@@ -93,37 +80,18 @@ public class ActivityFileParser implements IActivityFileParser {
         return Optional.empty();
     }
 
-    private Element toLifecycleEventHandlerElement(MethodDeclaration declaration, Document document, String fileName) {
-        Element lifecycleEventHandlerElement =
-                document.createElement("LifecycleEventHandler");
-
-        lifecycleEventHandlerElement.setAttribute(
-                "Name",
-                declaration.getNameAsString());
-
-        lifecycleEventHandlerElement.appendChild(
-                toLocationElement(
-                        declaration
-                                .getRange()
-                                .get(),
-                        document,
-                        fileName));
-
-        return lifecycleEventHandlerElement;
+    private LifecycleEventHandler toLifecycleEventHandler(MethodDeclaration declaration, String fileName) {
+        return
+                new LifecycleEventHandler(
+                        toLocation(declaration.getRange().get(), fileName),
+                        new ArrayList<>(),
+                        new ArrayList<>());
     }
 
-    private Element toLocationElement(Range range, Document document, String fileName) {
-        Element locationElement =
-                document.createElement("Location");
-
-        locationElement.setAttribute(
-                "FileName",
-                fileName);
-
-        locationElement.setAttribute(
-                "LineNumber",
-                String.valueOf(range.begin.line));
-
-        return locationElement;
+    private Location toLocation(Range range, String fileName) {
+        return
+                new Location(
+                        fileName,
+                        range.begin.line);
     }
 }

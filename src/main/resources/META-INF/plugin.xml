@@ -23,7 +23,8 @@
         <toolWindow
                 anchor="bottom"
                 factoryClass="windows.WindowFactory"
-                id="Activities Navigator" />
+                id="Activities Navigator"
+                secondary="true"/>
 
         <applicationService
                 serviceInterface="interfaces.IActivityFileProcessor"

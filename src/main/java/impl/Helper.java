@@ -29,6 +29,27 @@ public class Helper {
         return sb.toString();
     }
 
+    public static <T> Optional<T> findFirst(
+            NodeList nodeList,
+            String elementName,
+            Function<Element, T> processElement) {
+
+        AtomicReference<Optional<T>> result = new AtomicReference<>(Optional.empty());
+
+        processChildElements(
+                nodeList,
+                element ->
+                {
+                    if (element.getTagName().equals(elementName)) {
+                        result.set(Optional.of(processElement.apply(element)));
+                        return false;
+                    }
+                    return true;
+                });
+
+        return result.get();
+    }
+
     public static Optional<Element> findFirst(NodeList nodeList, Predicate<Element> predicate) {
         AtomicReference<Optional<Element>> result = new AtomicReference<>(Optional.empty());
 
@@ -45,7 +66,7 @@ public class Helper {
         return result.get();
     }
 
-    private static void processChildElements(NodeList nodeList, Function<Element, Boolean> processElement) {
+    public static void processChildElements(NodeList nodeList, Function<Element, Boolean> processElement) {
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
 
