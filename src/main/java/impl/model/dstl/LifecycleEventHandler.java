@@ -11,10 +11,12 @@ public class LifecycleEventHandler {
     public static final String XML_ELEMENT_NAME = "LifecycleEventHandler";
 
     public LifecycleEventHandler(
+            String name,
             Location location,
             List<ResourceAcquisition> resourceAcquisitions,
             List<ResourceRelease> resourceReleases) {
 
+        this.name = name;
         this.location = location;
         this.resourceAcquisitions = resourceAcquisitions;
         this.resourceReleases = resourceReleases;
@@ -44,11 +46,16 @@ public class LifecycleEventHandler {
 
         return
                 new LifecycleEventHandler(
+                        element.getAttribute("Name"),
                         Location
                                 .valueOf(element.getChildNodes())
                                 .orElseThrow(() -> new MissingElementException("Location element not found")),
                         resourceAcquisitions,
                         resourceReleases);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Location getLocation() {
@@ -63,6 +70,7 @@ public class LifecycleEventHandler {
         return resourceReleases;
     }
 
+    private final String name;
     private final Location location;
     private final List<ResourceAcquisition> resourceAcquisitions;
     private final List<ResourceRelease> resourceReleases;

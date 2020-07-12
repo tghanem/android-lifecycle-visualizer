@@ -1,7 +1,9 @@
 package interfaces;
 
-import impl.dsvl.LifecycleNode;
+import impl.model.dstl.LifecycleEventHandler;
+
+import java.util.List;
 
 public interface IActivityViewProvider {
-    void display(LifecycleNode viewDocument);
+    void display(List<LifecycleEventHandler> handlers);
 }

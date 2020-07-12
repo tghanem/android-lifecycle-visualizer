@@ -1,26 +1,17 @@
 package windows;
 
-import impl.dsvl.LifecycleNode;
+import impl.model.dstl.LifecycleEventHandler;
 import interfaces.IActivityViewProvider;
 
 import javax.swing.*;
+import java.util.List;
 
 public class ActivityForm implements IActivityViewProvider {
     private JPanel mainPanel;
-    private JButton onCreateButton;
-    private JButton onRestartButton;
-    private JButton onStartButton;
-    private JButton onResumeButton;
-    private JButton onPauseButton;
-    private JButton onStopButton;
-    private JButton onDestroyButton;
-    private JLabel activityLaunchedLabel;
-    private JLabel activityRunningLabel;
-    private JLabel appProcessKilledLabel;
-    private JLabel activityShutdownLabel;
 
     @Override
-    public void display(LifecycleNode viewDocument) {
+    public void display(List<LifecycleEventHandler> handlers) {
+
     }
 
     public JPanel getContent() {

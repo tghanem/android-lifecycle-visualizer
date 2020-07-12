@@ -83,6 +83,7 @@ public class ActivityFileParser implements IActivityFileParser {
     private LifecycleEventHandler toLifecycleEventHandler(MethodDeclaration declaration, String fileName) {
         return
                 new LifecycleEventHandler(
+                        declaration.getNameAsString(),
                         toLocation(declaration.getRange().get(), fileName),
                         new ArrayList<>(),
                         new ArrayList<>());

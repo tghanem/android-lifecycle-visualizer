@@ -3,7 +3,6 @@ package impl.services;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import impl.ActivityFileParser;
-import impl.dsvl.LifecycleNode;
 import impl.model.dstl.LifecycleAwareComponent;
 import interfaces.IActivityFileParser;
 import interfaces.IActivityFileProcessor;
@@ -29,16 +28,13 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
             return;
         }
 
-        LifecycleNode viewDocument =
-                LifecycleNode.valueOf(activityFileDocument.get());
-
         Collection<IActivityViewProvider> viewProviders =
                 ServiceManager
                         .getService(IActivityViewService.class)
                         .getViewProviders();
 
         for (IActivityViewProvider provider : viewProviders) {
-            provider.display(viewDocument);
+            provider.display(activityFileDocument.get().getLifecycleEventHandlers());
         }
     }
 }

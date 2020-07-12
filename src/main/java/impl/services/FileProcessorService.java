@@ -2,19 +2,16 @@ package impl.services;
 
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import impl.Helper;
 import interfaces.IActivityFileProcessor;
 import interfaces.IFileProcessor;
+import org.apache.xerces.parsers.DOMParser;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringReader;
 import java.util.Optional;
 
 public class FileProcessorService implements IFileProcessor {
@@ -27,13 +24,15 @@ public class FileProcessorService implements IFileProcessor {
             return;
         }
 
-        Document androidManifestDocument =
-                DocumentBuilderFactory
-                        .newInstance()
-                        .newDocumentBuilder()
-                        .parse(
-                                new InputSource(
-                                        new StringReader(VfsUtil.loadText(androidManifestFile.get().getVirtualFile()))));
+        DOMParser parser = new DOMParser();
+
+        parser.parse(
+                androidManifestFile
+                        .get()
+                        .getVirtualFile()
+                        .getPath());
+
+        Document androidManifestDocument = parser.getDocument();
 
         NodeList activityElements =
                 androidManifestDocument.getElementsByTagName("activity");

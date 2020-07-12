@@ -1,103 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="windows.ActivityForm">
-  <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="10" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="378" height="567"/>
+      <xy x="20" y="20" width="366" height="263"/>
     </constraints>
     <properties/>
     <border type="none"/>
-    <children>
-      <component id="510b3" class="javax.swing.JButton" binding="onCreateButton">
-        <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="onCreate"/>
-        </properties>
-      </component>
-      <component id="4640" class="javax.swing.JButton" binding="onRestartButton">
-        <constraints>
-          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="onRestart"/>
-        </properties>
-      </component>
-      <component id="dd1b9" class="javax.swing.JButton" binding="onStartButton">
-        <constraints>
-          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="onStart"/>
-        </properties>
-      </component>
-      <component id="79802" class="javax.swing.JButton" binding="onResumeButton">
-        <constraints>
-          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="onResume"/>
-        </properties>
-      </component>
-      <component id="ecaac" class="javax.swing.JButton" binding="onPauseButton">
-        <constraints>
-          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="onPause"/>
-        </properties>
-      </component>
-      <component id="aba28" class="javax.swing.JButton" binding="onStopButton">
-        <constraints>
-          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="onStop"/>
-        </properties>
-      </component>
-      <component id="2d31c" class="javax.swing.JButton" binding="onDestroyButton">
-        <constraints>
-          <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="onDestroy"/>
-        </properties>
-      </component>
-      <component id="49dfd" class="javax.swing.JLabel" binding="activityLaunchedLabel">
-        <constraints>
-          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <horizontalAlignment value="10"/>
-          <opaque value="true"/>
-          <text value="Activity Launched"/>
-        </properties>
-      </component>
-      <component id="c6589" class="javax.swing.JLabel" binding="activityRunningLabel">
-        <constraints>
-          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Activity Running"/>
-        </properties>
-      </component>
-      <component id="84578" class="javax.swing.JLabel" binding="appProcessKilledLabel">
-        <constraints>
-          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="App Process Killed"/>
-        </properties>
-      </component>
-      <component id="35220" class="javax.swing.JLabel" binding="activityShutdownLabel">
-        <constraints>
-          <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Activity Shutdown"/>
-        </properties>
-      </component>
-    </children>
+    <children/>
   </grid>
 </form>
