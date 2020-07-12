@@ -1,13 +1,11 @@
 package impl.model.dstl;
 
 import impl.Helper;
-import impl.dsvl.LifecycleNode;
 import impl.exceptions.MissingElementException;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class LifecycleAwareComponent {
     public LifecycleAwareComponent(
@@ -45,20 +43,6 @@ public class LifecycleAwareComponent {
 
     public List<LifecycleEventHandler> getLifecycleEventHandlers() {
         return lifecycleEventHandlers;
-    }
-
-    public void addIfPresent(List<LifecycleNode> nodes, String handlerName) {
-        findHandler(handlerName)
-                .ifPresent(handler -> nodes.add(new LifecycleNode(handlerName, Optional.of(handler))));
-    }
-
-    public Optional<LifecycleEventHandler> findHandler(String handlerName) {
-        for (LifecycleEventHandler handler : lifecycleEventHandlers) {
-            if (handler.getName().equals(handlerName)) {
-                return Optional.of(handler);
-            }
-        }
-        return Optional.empty();
     }
 
     private final Location location;
