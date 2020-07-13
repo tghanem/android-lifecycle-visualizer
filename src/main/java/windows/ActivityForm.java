@@ -6,7 +6,6 @@ import interfaces.IActivityViewProvider;
 
 import javax.swing.*;
 import java.util.List;
-import java.util.Optional;
 
 public class ActivityForm implements IActivityViewProvider {
     private JPanel mainPanel;
@@ -14,7 +13,7 @@ public class ActivityForm implements IActivityViewProvider {
 
     @Override
     public void display(List<LifecycleEventHandler> handlers) {
-        panel.setHandlers(Optional.of(handlers));
+        panel.populate(handlers);
         mainPanel.revalidate();
         mainPanel.repaint();
     }

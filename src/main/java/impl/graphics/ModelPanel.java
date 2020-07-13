@@ -5,131 +5,71 @@ import impl.model.dstl.LifecycleEventHandler;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.*;
 
 public class ModelPanel extends JPanel {
-    public ModelPanel() {
-        transitions = new ArrayList<>();
-    }
-
-    public void setHandlers(Optional<List<LifecycleEventHandler>> handlers) {
-        this.handlers = handlers;
+    public void populate(List<LifecycleEventHandler> handlers) {
+        graphRoot =
+            buildLifecycleGraph(
+                    () -> {
+                        revalidate();
+                        repaint();
+                    });
     }
 
     @Override
-    public void paint(Graphics graphics) {
-        super.paint(graphics);
+    protected void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
 
-        if (handlers == null || !handlers.isPresent()) {
-            return;
-        }
-
-        draw((Graphics2D) graphics, handlers.get());
-    }
-
-    private void draw(Graphics2D graphics, List<LifecycleEventHandler> handlers) {
         removeAll();
-        transitions.clear();
 
-        buildLifecycleTransitions(
-                buildLifecycleNodes(handlers));
+        GridLayout layout =
+                new GridLayout(
+                        Helper.getMaxDepth(graphRoot),
+                        Helper.getMaxWidth(graphRoot));
 
-        add(transitions.get(0).getStart());
+        setLayout(layout);
+
+
     }
 
-    private void buildLifecycleTransitions(
-            HashMap<String, LifecycleNode> nodeHashMap) {
+    private LifecycleNode buildLifecycleGraph(Runnable repaint) {
+        LifecycleNode onCreate =
+                new LifecycleNode("onCreate", repaint);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onCreate"),
-                        nodeHashMap.get("onStart")));
+        LifecycleNode onStart =
+                new LifecycleNode("onStart", repaint);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onStart"),
-                        nodeHashMap.get("onResume")));
+        onCreate.add(onStart);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onResume"),
-                        nodeHashMap.get("onPause")));
+        LifecycleNode onResume =
+                new LifecycleNode("onResume", repaint);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onPause"),
-                        nodeHashMap.get("onResume")));
+        onStart.addChild(onResume);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onPause"),
-                        nodeHashMap.get("onCreate")));
+        LifecycleNode onPause =
+                new LifecycleNode("onPause", repaint);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onPause"),
-                        nodeHashMap.get("onStop")));
+        onResume.addChild(onPause);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onStop"),
-                        nodeHashMap.get("onCreate")));
+        LifecycleNode onRestart =
+                new LifecycleNode("onRestart", repaint);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onStop"),
-                        nodeHashMap.get("onRestart")));
+        LifecycleNode onStop =
+                new LifecycleNode("onStop", repaint);
 
-        transitions.add(
-                new LifecycleTransition(
-                        nodeHashMap.get("onStop"),
-                        nodeHashMap.get("onDestroy")));
+        onPause.addChild(onResume);
+        onPause.addChild(onStop);
+        onPause.addChild(onCreate);
+
+        LifecycleNode onDestroy =
+                new LifecycleNode("onDestroy", repaint);
+
+        onStop.addChild(onRestart);
+        onStop.addChild(onDestroy);
+        onStop.addChild(onCreate);
+
+        return onCreate;
     }
 
-    private HashMap<String, LifecycleNode> buildLifecycleNodes(
-            List<LifecycleEventHandler> handlers) {
-
-        HashMap<String, LifecycleNode> nodeHashMap =
-                new HashMap<>();
-
-        nodeHashMap.put("onCreate", buildLifecycleNode(handlers, "onCreate"));
-        nodeHashMap.put("onStart", buildLifecycleNode(handlers, "onStart"));
-        nodeHashMap.put("onResume", buildLifecycleNode(handlers, "onResume"));
-        nodeHashMap.put("onPause", buildLifecycleNode(handlers, "onPause"));
-        nodeHashMap.put("onRestart", buildLifecycleNode(handlers, "onRestart"));
-        nodeHashMap.put("onStop", buildLifecycleNode(handlers, "onStop"));
-        nodeHashMap.put("onDestroy", buildLifecycleNode(handlers, "onDestroy"));
-
-        return nodeHashMap;
-    }
-
-    private LifecycleNode buildLifecycleNode(
-            List<LifecycleEventHandler> handlers,
-            String nodeName) {
-
-        for (LifecycleEventHandler handler : handlers) {
-            if (handler.getName().equals(nodeName)) {
-                return
-                        new LifecycleNode(
-                                nodeName,
-                                this::drawTransitions,
-                                Optional.of(handler));
-            }
-        }
-
-        return
-                new LifecycleNode(
-                        nodeName,
-                        this::drawTransitions,
-                        Optional.empty());
-    }
-
-    private void drawTransitions(LifecycleNode node) {
-        for (LifecycleTransition transition : transitions) {
-
-        }
-    }
-
-    private Optional<List<LifecycleEventHandler>> handlers;
-    private List<LifecycleTransition> transitions;
+    private LifecycleNode graphRoot;
 }

@@ -1,48 +1,71 @@
 package impl.graphics;
 
-import impl.model.dstl.LifecycleEventHandler;
-
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.util.Optional;
-import java.util.function.Consumer;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-public class LifecycleNode extends JButton {
-    public LifecycleNode(
-            String name,
-            Consumer<LifecycleNode> drawTransitions,
-            Optional<LifecycleEventHandler> handler) {
+public class LifecycleNode extends JButton implements ActionListener {
+    public LifecycleNode(String name, Runnable repaint) {
+        super(name);
 
         this.name = name;
-        this.drawTransitions = drawTransitions;
-        this.handler = handler;
+        this.repaint = repaint;
+        this.children = new ArrayList<>();
 
-        this.addActionListener(
-                new AbstractAction() {
-                    @Override
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        buttonClicked();
-                    }
-                });
+        this.addActionListener(this);
     }
 
-    public Optional<LifecycleEventHandler> getHandler() {
-        return handler;
+    public List<LifecycleNode> getChildren() {
+        return children;
+    }
+
+    public void addChild(LifecycleNode value) {
+        children.add(value);
+    }
+
+    public boolean getShouldShow() {
+        return shouldShow;
+    }
+
+    public void setShouldShow(boolean value) {
+        shouldShow = value;
     }
 
     @Override
-    public void paint(Graphics graphics) {
-        super.paint(graphics);
-        setText(name);
-        setEnabled(handler.isPresent());
+    public void actionPerformed(ActionEvent actionEvent) {
+        shouldShow = !shouldShow;
+
+        for (LifecycleNode child : children) {
+            child.setShouldShow(!child.getShouldShow());
+        }
+
+        repaint.run();
     }
 
-    private void buttonClicked() {
-        drawTransitions.accept(this);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        LifecycleNode that = (LifecycleNode) o;
+
+        return name.equals(that.name);
     }
 
-    private String name;
-    private Consumer<LifecycleNode> drawTransitions;
-    private final Optional<LifecycleEventHandler> handler;
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
+
+    private boolean shouldShow;
+
+    private final String name;
+    private final Runnable repaint;
+    private final List<LifecycleNode> children;
 }
