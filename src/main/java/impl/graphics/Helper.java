@@ -6,18 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class Helper {
-    public static int getMaxDepth(
-            LifecycleNode node) {
-
-        HashSet<LifecycleNode> visitedNodes =
-                new HashSet<>();
-
-        visitedNodes.add(node);
-
-        return traverseGetMaxDepth(node, visitedNodes, 0);
-    }
-
-    public static int getMaxWidth(
+    public static List<List<LifecycleNode>> getLevelNodes(
             LifecycleNode node) {
 
         HashSet<LifecycleNode> countedNodes =
@@ -26,56 +15,33 @@ public class Helper {
         List<LifecycleNode> firstLevelNodes =
                 Arrays.asList(node);
 
-        return traverseGetMaxNodeCount(firstLevelNodes, countedNodes);
+        List<List<LifecycleNode>> levelNodes =
+                new ArrayList<>();
+
+        traverseGetLevelNodes(firstLevelNodes, countedNodes, levelNodes);
+
+        return levelNodes;
     }
 
-    private static int traverseGetMaxDepth(
-            LifecycleNode node,
-            HashSet<LifecycleNode> visitedNodes,
-            int depth) {
-
-        int maxDepth = depth;
-
-        for (LifecycleNode child : node.getChildren()) {
-            if (!visitedNodes.contains(child)) {
-                visitedNodes.add(child);
-
-                int childMaxDepth =
-                        traverseGetMaxDepth(child, visitedNodes, depth + 1);
-
-                if (childMaxDepth > maxDepth) {
-                    maxDepth = childMaxDepth;
-                }
-
-                visitedNodes.remove(child);
-            }
-        }
-
-        return maxDepth;
-    }
-
-    private static int traverseGetMaxNodeCount(
+    private static void traverseGetLevelNodes(
             List<LifecycleNode> nodes,
-            HashSet<LifecycleNode> countedNodes) {
+            HashSet<LifecycleNode> countedNodes,
+            List<List<LifecycleNode>> levelNodes) {
 
         List<LifecycleNode> nextLevelNodes =
                 new ArrayList<>();
 
-        int nodeCount = 0;
-
         for (LifecycleNode node : nodes) {
             if (!countedNodes.contains(node)) {
                 for (LifecycleNode child : node.getChildren()) {
-                    nodeCount++;
                     nextLevelNodes.add(child);
                 }
                 countedNodes.add(node);
             }
         }
 
-        int nextLevelNodeCount =
-                traverseGetMaxNodeCount(nextLevelNodes, countedNodes);
+        levelNodes.add(nextLevelNodes);
 
-        return Math.max(nodeCount, nextLevelNodeCount);
+        traverseGetLevelNodes(nextLevelNodes, countedNodes, levelNodes);
     }
 }

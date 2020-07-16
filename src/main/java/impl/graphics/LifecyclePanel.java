@@ -6,14 +6,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-public class ModelPanel extends JPanel {
+public class LifecyclePanel extends JPanel {
+    private static final int LIFECYCLE_TREE_DEPTH = 6;
+
     public void populate(List<LifecycleEventHandler> handlers) {
         graphRoot =
-            buildLifecycleGraph(
-                    () -> {
-                        revalidate();
-                        repaint();
-                    });
+                buildLifecycleGraph(
+                        () -> {
+                            revalidate();
+                            repaint();
+                        });
     }
 
     @Override
@@ -22,14 +24,38 @@ public class ModelPanel extends JPanel {
 
         removeAll();
 
+        List<List<LifecycleNode>> levelNodes =
+                Helper.getLevelNodes(graphRoot);
+
+        int maxLevelNodeCount =
+                getMaxLevelNodeCount(levelNodes);
+
         GridLayout layout =
                 new GridLayout(
-                        Helper.getMaxDepth(graphRoot),
-                        Helper.getMaxWidth(graphRoot));
+                        LIFECYCLE_TREE_DEPTH,
+                        maxLevelNodeCount);
 
         setLayout(layout);
 
+        for (List<LifecycleNode> nodes : levelNodes) {
+            for (int i = 0; i < nodes.size(); i++) {
+                if (i < nodes.size()) {
+                    add(nodes.get(i));
+                } else {
+                    add(new JPanel());
+                }
+            }
+        }
+    }
 
+    private int getMaxLevelNodeCount(List<List<LifecycleNode>> levelNodes) {
+        int maxCount = 0;
+        for (List<LifecycleNode> nodes : levelNodes) {
+            if (nodes.size() > maxCount) {
+                maxCount = nodes.size();
+            }
+        }
+        return maxCount;
     }
 
     private LifecycleNode buildLifecycleGraph(Runnable repaint) {

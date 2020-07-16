@@ -1,6 +1,6 @@
 package windows;
 
-import impl.graphics.ModelPanel;
+import impl.graphics.LifecyclePanel;
 import impl.model.dstl.LifecycleEventHandler;
 import interfaces.IActivityViewProvider;
 
@@ -9,7 +9,7 @@ import java.util.List;
 
 public class ActivityForm implements IActivityViewProvider {
     private JPanel mainPanel;
-    private ModelPanel panel;
+    private LifecyclePanel panel;
 
     @Override
     public void display(List<LifecycleEventHandler> handlers) {
@@ -23,7 +23,7 @@ public class ActivityForm implements IActivityViewProvider {
     }
 
     private void createUIComponents() {
-        panel = new ModelPanel();
+        panel = new LifecyclePanel();
         mainPanel = new JPanel();
         mainPanel.add(panel);
     }
