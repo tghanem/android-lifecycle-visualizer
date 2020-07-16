@@ -18,6 +18,8 @@ public class Helper {
         List<List<LifecycleNode>> levelNodes =
                 new ArrayList<>();
 
+        levelNodes.add(firstLevelNodes);
+
         traverseGetLevelNodes(firstLevelNodes, countedNodes, levelNodes);
 
         return levelNodes;
@@ -33,15 +35,18 @@ public class Helper {
 
         for (LifecycleNode node : nodes) {
             if (!countedNodes.contains(node)) {
-                for (LifecycleNode child : node.getChildren()) {
-                    nextLevelNodes.add(child);
+                if (node instanceof LifecycleHandlerNode) {
+                    for (LifecycleNode child : ((LifecycleHandlerNode)node).getChildren()) {
+                        nextLevelNodes.add(child);
+                    }
                 }
                 countedNodes.add(node);
             }
         }
 
-        levelNodes.add(nextLevelNodes);
-
-        traverseGetLevelNodes(nextLevelNodes, countedNodes, levelNodes);
+        if (nextLevelNodes.size() > 0) {
+            levelNodes.add(nextLevelNodes);
+            traverseGetLevelNodes(nextLevelNodes, countedNodes, levelNodes);
+        }
     }
 }

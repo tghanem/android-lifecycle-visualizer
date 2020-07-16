@@ -1,51 +1,63 @@
 package impl.graphics;
 
-import impl.model.dstl.LifecycleEventHandler;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Optional;
 
 public class LifecyclePanel extends JPanel {
-    private static final int LIFECYCLE_TREE_DEPTH = 6;
+    public LifecyclePanel() {
+        graphRoot = Optional.empty();
+    }
 
-    public void populate(List<LifecycleEventHandler> handlers) {
-        graphRoot =
+    public void populate(LifecycleHandlerCollection handlers) {
+        LifecycleNode root =
                 buildLifecycleGraph(
+                        handlers,
                         () -> {
+                            shouldRedraw = true;
                             revalidate();
                             repaint();
                         });
+
+        graphRoot = Optional.of(root);
+        shouldRedraw = true;
     }
 
     @Override
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
 
+        if (!graphRoot.isPresent() || !shouldRedraw) {
+            return;
+        }
+
         removeAll();
 
         List<List<LifecycleNode>> levelNodes =
-                Helper.getLevelNodes(graphRoot);
+                Helper.getLevelNodes(graphRoot.get());
 
         int maxLevelNodeCount =
                 getMaxLevelNodeCount(levelNodes);
 
         GridLayout layout =
                 new GridLayout(
-                        LIFECYCLE_TREE_DEPTH,
+                        levelNodes.size(),
                         maxLevelNodeCount);
 
         setLayout(layout);
 
         for (List<LifecycleNode> nodes : levelNodes) {
-            for (int i = 0; i < nodes.size(); i++) {
+            for (int i = 0; i < maxLevelNodeCount; i++) {
                 if (i < nodes.size()) {
                     add(nodes.get(i));
                 } else {
-                    add(new JPanel());
+                    add(new JLabel(" "));
                 }
             }
         }
+
+        shouldRedraw = false;
     }
 
     private int getMaxLevelNodeCount(List<List<LifecycleNode>> levelNodes) {
@@ -58,37 +70,40 @@ public class LifecyclePanel extends JPanel {
         return maxCount;
     }
 
-    private LifecycleNode buildLifecycleGraph(Runnable repaint) {
-        LifecycleNode onCreate =
-                new LifecycleNode("onCreate", repaint);
+    private LifecycleNode buildLifecycleGraph(
+            LifecycleHandlerCollection handlers,
+            Runnable repaint) {
 
-        LifecycleNode onStart =
-                new LifecycleNode("onStart", repaint);
+        LifecycleHandlerNode onCreate =
+                handlers.buildLifecycleHandlerNode("onCreate", repaint);
 
-        onCreate.add(onStart);
+        LifecycleHandlerNode onStart =
+                handlers.buildLifecycleHandlerNode("onStart", repaint);
 
-        LifecycleNode onResume =
-                new LifecycleNode("onResume", repaint);
+        onCreate.addChild(onStart);
+
+        LifecycleHandlerNode onResume =
+                handlers.buildLifecycleHandlerNode("onResume", repaint);
 
         onStart.addChild(onResume);
 
-        LifecycleNode onPause =
-                new LifecycleNode("onPause", repaint);
+        LifecycleHandlerNode onPause =
+                handlers.buildLifecycleHandlerNode("onPause", repaint);
 
         onResume.addChild(onPause);
 
-        LifecycleNode onRestart =
-                new LifecycleNode("onRestart", repaint);
+        LifecycleHandlerNode onRestart =
+                handlers.buildLifecycleHandlerNode("onRestart", repaint);
 
-        LifecycleNode onStop =
-                new LifecycleNode("onStop", repaint);
+        LifecycleHandlerNode onStop =
+                handlers.buildLifecycleHandlerNode("onStop", repaint);
 
         onPause.addChild(onResume);
         onPause.addChild(onStop);
         onPause.addChild(onCreate);
 
-        LifecycleNode onDestroy =
-                new LifecycleNode("onDestroy", repaint);
+        LifecycleHandlerNode onDestroy =
+                handlers.buildLifecycleHandlerNode("onDestroy", repaint);
 
         onStop.addChild(onRestart);
         onStop.addChild(onDestroy);
@@ -97,5 +112,6 @@ public class LifecyclePanel extends JPanel {
         return onCreate;
     }
 
-    private LifecycleNode graphRoot;
+    private Boolean shouldRedraw;
+    private Optional<LifecycleNode> graphRoot;
 }
