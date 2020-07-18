@@ -9,6 +9,7 @@ import impl.model.dstl.LifecycleAwareComponent;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.Location;
 import interfaces.IActivityFileParser;
+import org.jetbrains.kotlin.psi.KtFile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,10 +30,10 @@ public class ActivityFileParser implements IActivityFileParser {
     public Optional<LifecycleAwareComponent> parse(
             PsiFile file) throws Exception {
 
-        PsiJavaFile asJava = (PsiJavaFile) file;
-        PsiClass[] classes = asJava.getClasses();
+        Optional<PsiClass[]> classes =
+                getClasses(file);
 
-        if (classes.length == 0) {
+        if (!classes.isPresent() || classes.get().length == 0) {
             return Optional.empty();
         }
 
@@ -40,7 +41,7 @@ public class ActivityFileParser implements IActivityFileParser {
                 new ArrayList<>();
 
         try {
-            for (PsiMethod method : classes[0].getAllMethods()) {
+            for (PsiMethod method : classes.get()[0].getAllMethods()) {
                 if (callbacks.contains(method.getName())) {
                     handlers.add(
                             new LifecycleEventHandler(
@@ -57,7 +58,21 @@ public class ActivityFileParser implements IActivityFileParser {
         return
                 Optional.of(
                         new LifecycleAwareComponent(
-                                new Location(file.getName(), classes[0].getTextOffset()),
+                                new Location(
+                                        file.getName(),
+                                        classes.get()[0].getTextOffset()),
                                 handlers));
+    }
+
+    private Optional<PsiClass[]> getClasses(PsiFile file) {
+        if (file instanceof PsiJavaFile) {
+            PsiJavaFile javaFile = (PsiJavaFile)file;
+            return Optional.of(javaFile.getClasses());
+        } else if (file instanceof KtFile) {
+            KtFile kotlinFile = (KtFile)file;
+            return Optional.of(kotlinFile.getClasses());
+        } else {
+            return Optional.empty();
+        }
     }
 }

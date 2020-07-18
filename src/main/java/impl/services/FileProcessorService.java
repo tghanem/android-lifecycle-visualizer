@@ -57,6 +57,7 @@ public class FileProcessorService implements IFileProcessor {
         String activityName =
                 activityNameTokens[activityNameTokens.length - 1];
 
-        return (activityName + ".java").equals(fileName);
+        return (activityName + ".java").equals(fileName) ||
+                (activityName + ".kt").equals(fileName);
     }
 }
