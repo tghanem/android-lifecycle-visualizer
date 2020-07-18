@@ -3,7 +3,6 @@ package impl.graphics;
 import impl.model.dstl.LifecycleEventHandler;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,45 +11,57 @@ public class LifecycleHandlerNode extends LifecycleNode {
         super(name);
 
         this.handler = handler;
-        this.children = new ArrayList<>();
+        this.links = new ArrayList<>();
         this.setVisible(false);
     }
 
-    public List<LifecycleNode> getChildren() {
-        return children;
+    public List<LifecycleLink> getLinks() {
+        return links;
     }
 
-    public void addChild(LifecycleNode value) {
-        children.add(value);
+    public List<LifecycleLink> getNonCircularLinks() {
+        List<LifecycleLink> result = new ArrayList<>();
+        for (LifecycleLink link : links) {
+            if (!link.isCircular()) {
+                result.add(link);
+            }
+        }
+        return result;
+    }
+
+    public void addLink(LifecycleNode node, boolean isCircular) {
+        addLink(new LifecycleLink(node, isCircular));
+    }
+
+    public void addLink(LifecycleLink value) {
+        links.add(value);
     }
 
     public void traverse(LifecycleNodeConsumer consumer) {
-        traverseInternal(
-                0,
-                this,
-                new HashSet<>(),
-                consumer);
+        traverseInternal(0, this, consumer);
     }
 
     private void traverseInternal(
             int depth,
             LifecycleNode node,
-            HashSet<LifecycleNode> visitedNodes,
             LifecycleNodeConsumer processNode) {
 
         processNode.accept(depth, node);
-        visitedNodes.add(node);
 
         if (node instanceof LifecycleHandlerNode) {
-            LifecycleHandlerNode handlerNode = (LifecycleHandlerNode)node;
-            for (LifecycleNode child : handlerNode.getChildren()) {
-                if (!visitedNodes.contains(child)) {
-                    traverseInternal(depth + 1, child, visitedNodes, processNode);
+            LifecycleHandlerNode handlerNode = (LifecycleHandlerNode) node;
+
+            for (LifecycleLink link : handlerNode.getLinks()) {
+                if (!link.isCircular()) {
+                    traverseInternal(
+                            depth + 1,
+                            link.getTarget(),
+                            processNode);
                 }
             }
         }
     }
 
-    private final List<LifecycleNode> children;
+    private final List<LifecycleLink> links;
     private final Optional<LifecycleEventHandler> handler;
 }

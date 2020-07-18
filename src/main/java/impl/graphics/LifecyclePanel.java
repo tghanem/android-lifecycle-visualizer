@@ -2,6 +2,7 @@ package impl.graphics;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Path2D;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -40,13 +41,13 @@ public class LifecyclePanel extends JPanel {
                     subtreeVisibleHashMap.get(node);
 
             if (!subtreeVisible) {
-                for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
-                    child.setVisible(true);
+                for (LifecycleLink link : lifecycleHandlerNode.getNonCircularLinks()) {
+                    link.getTarget().setVisible(true);
                 }
                 subtreeVisibleHashMap.replace(node, true);
             } else {
-                for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
-                    setNodeVisibility(child, false);
+                for (LifecycleLink link : lifecycleHandlerNode.getNonCircularLinks()) {
+                    setNodeVisibility(link.getTarget(), false);
                 }
                 subtreeVisibleHashMap.replace(node, false);
             }
@@ -59,8 +60,8 @@ public class LifecyclePanel extends JPanel {
 
         if (node instanceof LifecycleHandlerNode) {
             LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode) node;
-            for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
-                setNodeVisibility(child, visibility);
+            for (LifecycleLink link : lifecycleHandlerNode.getNonCircularLinks()) {
+                setNodeVisibility(link.getTarget(), visibility);
             }
             subtreeVisibleHashMap.replace(node, false);
         }
@@ -101,8 +102,8 @@ public class LifecyclePanel extends JPanel {
         }
 
         double rowHeight = (double) getHeight() / rows.size();
-        double nodeHeight = 0.2 * rowHeight;
-        double paddingHeight = 0.8 * rowHeight;
+        double nodeHeight = 0.5 * rowHeight;
+        double paddingHeight = 0.5 * rowHeight;
 
         double rowWidth = (double) getWidth() / maxCount;
         double nodeWidth = 0.5 * rowWidth;
@@ -125,11 +126,46 @@ public class LifecyclePanel extends JPanel {
                                 (int) nodeWidth,
                                 (int) nodeHeight);
 
+
                 leftMargin += nodeWidth + paddingWidth;
             }
 
             topMargin += nodeHeight + paddingHeight;
         }
+
+        Graphics2D g2 = (Graphics2D) graphics;
+
+        for (List<LifecycleNode> row : rows) {
+            for (LifecycleNode node : row) {
+                if (node instanceof LifecycleHandlerNode) {
+                    LifecycleHandlerNode handlerNode = (LifecycleHandlerNode) node;
+
+                    for (LifecycleLink link : handlerNode.getLinks()) {
+                        if (link.getTarget().isVisible()) {
+                            if (!link.isCircular()) {
+                                drawNonCircularLine(
+                                        g2,
+                                        node.getBounds(),
+                                        link.getTarget().getBounds());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void drawNonCircularLine(
+            Graphics2D graphics,
+            Rectangle source,
+            Rectangle target) {
+
+        Path2D path = new Path2D.Double();
+        path.moveTo(source.x + source.width / 2.0, source.y);
+        path.lineTo(target.x + target.width / 2.0, target.y);
+        path.closePath();
+
+        graphics.draw(path);
     }
 
     private LifecycleHandlerNode buildLifecycleGraph(
@@ -144,28 +180,24 @@ public class LifecyclePanel extends JPanel {
         LifecycleHandlerNode onStart =
                 handlers.buildLifecycleHandlerNode("onStart", repaint);
 
-        onCreate.addChild(onStart);
+        onCreate.addLink(onStart, false);
 
         LifecycleHandlerNode onResume =
                 handlers.buildLifecycleHandlerNode("onResume", repaint);
 
-        onStart.addChild(onResume);
+        onStart.addLink(onResume, false);
 
         LifecycleHandlerNode onPause =
                 handlers.buildLifecycleHandlerNode("onPause", repaint);
 
-        onResume.addChild(onPause);
+        onResume.addLink(onPause, false);
 
         LifecycleHandlerNode onStop =
                 handlers.buildLifecycleHandlerNode("onStop", repaint);
 
-        onPause.addChild(
-                handlers.buildLifecycleHandlerNode("onResume", repaint));
-
-        onPause.addChild(onStop);
-
-        onPause.addChild(
-                handlers.buildLifecycleHandlerNode("onCreate", repaint));
+        onPause.addLink(onResume, true);
+        onPause.addLink(onStop, false);
+        onPause.addLink(onCreate, true);
 
         LifecycleHandlerNode onRestart =
                 handlers.buildLifecycleHandlerNode("onRestart", repaint);
@@ -173,12 +205,9 @@ public class LifecyclePanel extends JPanel {
         LifecycleHandlerNode onDestroy =
                 handlers.buildLifecycleHandlerNode("onDestroy", repaint);
 
-        onStop.addChild(onRestart);
-
-        onStop.addChild(onDestroy);
-
-        onStop.addChild(
-                handlers.buildLifecycleHandlerNode("onCreate", repaint));
+        onStop.addLink(onRestart, false);
+        onStop.addLink(onDestroy, false);
+        onStop.addLink(onCreate, true);
 
         subtreeVisibleHashMap.put(onCreate, false);
         subtreeVisibleHashMap.put(onStart, false);
