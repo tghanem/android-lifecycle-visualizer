@@ -4,24 +4,67 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class LifecyclePanel extends JPanel {
     public LifecyclePanel() {
         levelNodes = Optional.empty();
+        subtreeVisibleHashMap = new HashMap<>();
     }
 
     public void populate(
             LifecycleHandlerCollection handlers) {
 
+        subtreeVisibleHashMap.clear();
+
         LifecycleNode root =
                 buildLifecycleGraph(
                         handlers,
-                        () -> {
+                        node -> {
+                            processNodeClicked(node);
                             revalidate();
                             repaint();
                         });
 
         levelNodes = Optional.of(getLevelNodes(root));
+    }
+
+    private void processNodeClicked(
+            LifecycleNode node) {
+
+        if (node instanceof LifecycleHandlerNode) {
+            LifecycleHandlerNode lifecycleHandlerNode =
+                    (LifecycleHandlerNode)node;
+
+            Boolean subtreeVisible =
+                    subtreeVisibleHashMap.get(node);
+
+            if (!subtreeVisible) {
+                for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
+                    child.setVisible(true);
+                }
+                subtreeVisibleHashMap.replace(node, true);
+            } else {
+                for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
+                    setNodeVisibility(child, false);
+                }
+                subtreeVisibleHashMap.replace(node, false);
+            }
+        }
+    }
+
+    private void setNodeVisibility(
+            LifecycleNode node,
+            boolean visibility) {
+
+        if (node instanceof LifecycleHandlerNode) {
+            LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode)node;
+            for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
+                setNodeVisibility(child, visibility);
+            }
+            subtreeVisibleHashMap.replace(node, false);
+        }
+        node.setVisible(visibility);
     }
 
     @Override
@@ -87,7 +130,7 @@ public class LifecyclePanel extends JPanel {
 
     private LifecycleNode buildLifecycleGraph(
             LifecycleHandlerCollection handlers,
-            Runnable repaint) {
+            Consumer<LifecycleNode> repaint) {
 
         LifecycleHandlerNode onCreate =
                 handlers.buildLifecycleHandlerNode("onCreate", repaint);
@@ -132,6 +175,14 @@ public class LifecyclePanel extends JPanel {
 
         onStop.addChild(
                 handlers.buildLifecycleHandlerNode("onCreate", repaint));
+
+        subtreeVisibleHashMap.put(onCreate, false);
+        subtreeVisibleHashMap.put(onStart, false);
+        subtreeVisibleHashMap.put(onResume, false);
+        subtreeVisibleHashMap.put(onPause, false);
+        subtreeVisibleHashMap.put(onStop, false);
+        subtreeVisibleHashMap.put(onRestart, false);
+        subtreeVisibleHashMap.put(onDestroy, false);
 
         return onCreate;
     }
@@ -185,4 +236,5 @@ public class LifecyclePanel extends JPanel {
     }
 
     private Optional<List<List<LifecycleNode>>> levelNodes;
+    private HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap;
 }

@@ -5,6 +5,7 @@ import impl.model.dstl.LifecycleEventHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class LifecycleHandlerCollection extends ArrayList<LifecycleEventHandler> {
     public LifecycleHandlerCollection(Collection<LifecycleEventHandler> collection) {
@@ -20,11 +21,14 @@ public class LifecycleHandlerCollection extends ArrayList<LifecycleEventHandler>
         return Optional.empty();
     }
 
-    public LifecycleHandlerNode buildLifecycleHandlerNode(String handlerName, Runnable repaint) {
-        return
+    public LifecycleHandlerNode buildLifecycleHandlerNode(String handlerName, Consumer<LifecycleNode> repaint) {
+        LifecycleHandlerNode node =
                 new LifecycleHandlerNode(
                         findByName(handlerName),
-                        handlerName,
-                        repaint);
+                        handlerName);
+
+        node.addActionListener(n -> repaint.accept(node));
+
+        return node;
     }
 }
