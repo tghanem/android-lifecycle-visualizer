@@ -17,7 +17,7 @@ public class LifecyclePanel extends JPanel {
 
         subtreeVisibleHashMap.clear();
 
-        LifecycleNode root =
+        LifecycleHandlerNode root =
                 buildLifecycleGraph(
                         handlers,
                         node -> {
@@ -80,52 +80,59 @@ public class LifecyclePanel extends JPanel {
         removeAll();
         setLayout(null);
 
-        paintComponent(
-                graphRoot.get(),
-                new HashSet<>(),
-                0,
-                50,
-                200);
-    }
+        List<List<LifecycleNode>> rows =
+                new ArrayList<>();
 
-    private void paintComponent(
-            LifecycleNode node,
-            HashSet<LifecycleNode> drawnNodes,
-            int nodeIndex,
-            int topMargin,
-            int leftMargin) {
+        graphRoot.get().traverse(
+                (level, n) -> {
+                    if (level < rows.size()) {
+                        rows.get(level).add(n);
+                    } else {
+                        rows.add(new ArrayList<>(Arrays.asList(n)));
+                    }
+                });
 
-        add(node);
+        int maxCount = 0;
 
-        node.setBounds(
-                leftMargin + nodeIndex * (100 + 50),
-                topMargin,
-                100,
-                30);
-
-        drawnNodes.add(node);
-
-        if (node instanceof LifecycleHandlerNode) {
-            LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode) node;
-            List<LifecycleNode> children = lifecycleHandlerNode.getChildren();
-            int effectiveColumnIndex = 0;
-
-            for (int i = 0; i < children.size(); i++) {
-                if (!drawnNodes.contains(children.get(i))) {
-                    paintComponent(
-                            children.get(i),
-                            drawnNodes,
-                            effectiveColumnIndex,
-                            topMargin + 30 + 50,
-                            leftMargin);
-
-                    effectiveColumnIndex++;
-                }
+        for (List<LifecycleNode> row : rows) {
+            if (row.size() > maxCount) {
+                maxCount = row.size();
             }
+        }
+
+        double rowHeight = (double) getHeight() / rows.size();
+        double nodeHeight = 0.2 * rowHeight;
+        double paddingHeight = 0.8 * rowHeight;
+
+        double rowWidth = (double) getWidth() / maxCount;
+        double nodeWidth = 0.5 * rowWidth;
+        double paddingWidth = 0.5 * rowWidth;
+
+        double topMargin = 0;
+
+        for (int i = 0; i < rows.size(); i++) {
+            double leftMargin = 0;
+
+            for (int j = 0; j < rows.get(i).size(); j++) {
+                LifecycleNode lifecycleNode = rows.get(i).get(j);
+
+                add(lifecycleNode);
+
+                lifecycleNode
+                        .setBounds(
+                                (int) leftMargin,
+                                (int) topMargin,
+                                (int) nodeWidth,
+                                (int) nodeHeight);
+
+                leftMargin += nodeWidth + paddingWidth;
+            }
+
+            topMargin += nodeHeight + paddingHeight;
         }
     }
 
-    private LifecycleNode buildLifecycleGraph(
+    private LifecycleHandlerNode buildLifecycleGraph(
             LifecycleHandlerCollection handlers,
             Consumer<LifecycleNode> repaint) {
 
@@ -184,6 +191,6 @@ public class LifecyclePanel extends JPanel {
         return onCreate;
     }
 
-    private Optional<LifecycleNode> graphRoot;
+    private Optional<LifecycleHandlerNode> graphRoot;
     private HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap;
 }

@@ -3,6 +3,7 @@ package impl.graphics;
 import impl.model.dstl.LifecycleEventHandler;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,33 @@ public class LifecycleHandlerNode extends LifecycleNode {
 
     public void addChild(LifecycleNode value) {
         children.add(value);
+    }
+
+    public void traverse(LifecycleNodeConsumer consumer) {
+        traverseInternal(
+                0,
+                this,
+                new HashSet<>(),
+                consumer);
+    }
+
+    private void traverseInternal(
+            int depth,
+            LifecycleNode node,
+            HashSet<LifecycleNode> visitedNodes,
+            LifecycleNodeConsumer processNode) {
+
+        processNode.accept(depth, node);
+        visitedNodes.add(node);
+
+        if (node instanceof LifecycleHandlerNode) {
+            LifecycleHandlerNode handlerNode = (LifecycleHandlerNode)node;
+            for (LifecycleNode child : handlerNode.getChildren()) {
+                if (!visitedNodes.contains(child)) {
+                    traverseInternal(depth + 1, child, visitedNodes, processNode);
+                }
+            }
+        }
     }
 
     private final List<LifecycleNode> children;
