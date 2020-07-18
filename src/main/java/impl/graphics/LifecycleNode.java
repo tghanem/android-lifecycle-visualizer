@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Objects;
 
-public class LifecycleNode extends JButton implements ActionListener {
+public abstract class LifecycleNode extends JButton implements ActionListener {
     public LifecycleNode(String name, Runnable repaint) {
         super(name);
 
@@ -14,17 +14,12 @@ public class LifecycleNode extends JButton implements ActionListener {
         this.addActionListener(this);
     }
 
-    public boolean getShouldShow() {
-        return shouldShow;
-    }
-
-    public void setShouldShow(boolean value) {
-        shouldShow = value;
+    public String getName() {
+        return name;
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        shouldShow = !shouldShow;
         repaint.run();
     }
 
@@ -46,8 +41,11 @@ public class LifecycleNode extends JButton implements ActionListener {
         return Objects.hash(name);
     }
 
-    private boolean shouldShow;
+    @Override
+    public String toString() {
+        return name;
+    }
 
-    private final String name;
-    private final Runnable repaint;
+    protected final String name;
+    protected final Runnable repaint;
 }

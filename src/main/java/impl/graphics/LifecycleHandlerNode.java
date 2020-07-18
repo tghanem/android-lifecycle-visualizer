@@ -17,6 +17,7 @@ public class LifecycleHandlerNode extends LifecycleNode {
 
         this.handler = handler;
         this.children = new ArrayList<>();
+        this.setVisible(false);
     }
 
     public List<LifecycleNode> getChildren() {
@@ -29,11 +30,32 @@ public class LifecycleHandlerNode extends LifecycleNode {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        for (LifecycleNode child : children) {
-            child.setShouldShow(!child.getShouldShow());
+        if (!subtreeVisible) {
+            for (LifecycleNode child : children) {
+                child.setVisible(true);
+            }
+            subtreeVisible = true;
+        } else {
+            for (LifecycleNode child : children) {
+                toggleVisibility(child, false);
+            }
+            subtreeVisible = false;
         }
         super.actionPerformed(actionEvent);
     }
+
+    private void toggleVisibility(LifecycleNode node, boolean visibility) {
+        if (node instanceof LifecycleHandlerNode) {
+            LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode)node;
+            for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
+                toggleVisibility(child, visibility);
+            }
+            lifecycleHandlerNode.subtreeVisible = false;
+        }
+        node.setVisible(visibility);
+    }
+
+    private boolean subtreeVisible;
 
     private final List<LifecycleNode> children;
     private final Optional<LifecycleEventHandler> handler;

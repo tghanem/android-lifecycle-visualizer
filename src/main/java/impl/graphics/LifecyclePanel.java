@@ -3,71 +3,86 @@ package impl.graphics;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class LifecyclePanel extends JPanel {
     public LifecyclePanel() {
-        graphRoot = Optional.empty();
+        levelNodes = Optional.empty();
     }
 
-    public void populate(LifecycleHandlerCollection handlers) {
+    public void populate(
+            LifecycleHandlerCollection handlers) {
+
         LifecycleNode root =
                 buildLifecycleGraph(
                         handlers,
                         () -> {
-                            shouldRedraw = true;
                             revalidate();
                             repaint();
                         });
 
-        graphRoot = Optional.of(root);
-        shouldRedraw = true;
+        levelNodes = Optional.of(getLevelNodes(root));
     }
 
     @Override
-    protected void paintComponent(Graphics graphics) {
+    protected void paintComponent(
+            Graphics graphics) {
+
         super.paintComponent(graphics);
 
-        if (!graphRoot.isPresent() || !shouldRedraw) {
+        if (!levelNodes.isPresent()) {
             return;
         }
 
         removeAll();
-
-        List<List<LifecycleNode>> levelNodes =
-                Helper.getLevelNodes(graphRoot.get());
-
-        int maxLevelNodeCount =
-                getMaxLevelNodeCount(levelNodes);
-
-        GridLayout layout =
-                new GridLayout(
-                        levelNodes.size(),
-                        maxLevelNodeCount);
-
-        setLayout(layout);
-
-        for (List<LifecycleNode> nodes : levelNodes) {
-            for (int i = 0; i < maxLevelNodeCount; i++) {
-                if (i < nodes.size()) {
-                    add(nodes.get(i));
-                } else {
-                    add(new JLabel(" "));
-                }
-            }
-        }
-
-        shouldRedraw = false;
+        setLayout(null);
+        paintComponent((Graphics2D) graphics);
     }
 
-    private int getMaxLevelNodeCount(List<List<LifecycleNode>> levelNodes) {
-        int maxCount = 0;
-        for (List<LifecycleNode> nodes : levelNodes) {
-            if (nodes.size() > maxCount) {
-                maxCount = nodes.size();
+    private void paintComponent(
+            Graphics2D graphics) {
+
+        HashSet<LifecycleNode> drawnNodes =
+                new HashSet<>();
+
+        Insets insets = getInsets();
+
+        List<List<LifecycleNode>> rows = levelNodes.get();
+
+        int topMargin = insets.top + 50;
+
+        for (int i = 0; i < rows.size(); i++) {
+            int leftMargin = insets.left + 200;
+
+            for (int j = 0; j < rows.get(i).size(); j++) {
+                LifecycleNode node = rows.get(i).get(j);
+
+                if (drawnNodes.contains(node)) {
+                    continue;
+                }
+
+                Dimension nodeSize = node.getPreferredSize();
+
+                add(node);
+
+                node.setBounds(
+                        leftMargin,
+                        topMargin,
+                        100,
+                        30);
+
+                drawnNodes.add(node);
+
+                leftMargin += nodeSize.width + 50;
             }
+
+            topMargin +=
+                    rows
+                            .get(i)
+                            .get(0)
+                            .getPreferredSize()
+                            .height + 50;
         }
-        return maxCount;
     }
 
     private LifecycleNode buildLifecycleGraph(
@@ -76,6 +91,8 @@ public class LifecyclePanel extends JPanel {
 
         LifecycleHandlerNode onCreate =
                 handlers.buildLifecycleHandlerNode("onCreate", repaint);
+
+        onCreate.setVisible(true);
 
         LifecycleHandlerNode onStart =
                 handlers.buildLifecycleHandlerNode("onStart", repaint);
@@ -92,26 +109,80 @@ public class LifecyclePanel extends JPanel {
 
         onResume.addChild(onPause);
 
-        LifecycleHandlerNode onRestart =
-                handlers.buildLifecycleHandlerNode("onRestart", repaint);
-
         LifecycleHandlerNode onStop =
                 handlers.buildLifecycleHandlerNode("onStop", repaint);
 
-        onPause.addChild(onResume);
+        onPause.addChild(
+                handlers.buildLifecycleHandlerNode("onResume", repaint));
+
         onPause.addChild(onStop);
-        onPause.addChild(onCreate);
+
+        onPause.addChild(
+                handlers.buildLifecycleHandlerNode("onCreate", repaint));
+
+        LifecycleHandlerNode onRestart =
+                handlers.buildLifecycleHandlerNode("onRestart", repaint);
 
         LifecycleHandlerNode onDestroy =
                 handlers.buildLifecycleHandlerNode("onDestroy", repaint);
 
         onStop.addChild(onRestart);
+
         onStop.addChild(onDestroy);
-        onStop.addChild(onCreate);
+
+        onStop.addChild(
+                handlers.buildLifecycleHandlerNode("onCreate", repaint));
 
         return onCreate;
     }
 
-    private Boolean shouldRedraw;
-    private Optional<LifecycleNode> graphRoot;
+    private List<List<LifecycleNode>> getLevelNodes(
+            LifecycleNode node) {
+
+        HashSet<LifecycleNode> countedNodes =
+                new HashSet<>();
+
+        List<List<LifecycleNode>> levelNodes =
+                new ArrayList<>();
+
+        levelNodes.add(Arrays.asList(node));
+
+        traverseGetLevelNodes(
+                Arrays.asList(node),
+                countedNodes,
+                levelNodes);
+
+        return levelNodes;
+    }
+
+    private void traverseGetLevelNodes(
+            List<LifecycleNode> nodes,
+            HashSet<LifecycleNode> countedNodes,
+            List<List<LifecycleNode>> levelNodes) {
+
+        List<LifecycleNode> nextLevelNodes =
+                new ArrayList<>();
+
+        for (LifecycleNode node : nodes) {
+            if (!countedNodes.contains(node)) {
+                if (node instanceof LifecycleHandlerNode) {
+                    for (LifecycleNode child : ((LifecycleHandlerNode)node).getChildren()) {
+                        nextLevelNodes.add(child);
+                    }
+                }
+                countedNodes.add(node);
+            }
+        }
+
+        if (nextLevelNodes.size() > 0) {
+            levelNodes.add(nextLevelNodes);
+
+            traverseGetLevelNodes(
+                    nextLevelNodes,
+                    countedNodes,
+                    levelNodes);
+        }
+    }
+
+    private Optional<List<List<LifecycleNode>>> levelNodes;
 }

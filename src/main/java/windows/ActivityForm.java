@@ -18,7 +18,7 @@ public class ActivityForm implements IActivityViewProvider {
     }
 
     public JPanel getContent() {
-        return mainPanel;
+        return panel;
     }
 
     private void createUIComponents() {

@@ -1,6 +1,7 @@
 package impl.services;
 
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import impl.ActivityFileParser;
 import impl.graphics.LifecycleHandlerCollection;
@@ -23,7 +24,7 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
     @Override
     public void Process(VirtualFile file) throws Exception {
         Optional<LifecycleAwareComponent> activityFileDocument =
-                lifecycleParser.parse(file);
+                lifecycleParser.parse(VfsUtil.loadText(file), file.getName());
 
         if (!activityFileDocument.isPresent()) {
             return;

@@ -6,7 +6,6 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.intellij.openapi.vfs.VirtualFile;
 import impl.model.dstl.LifecycleAwareComponent;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.Location;
@@ -17,16 +16,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static com.intellij.openapi.vfs.VfsUtilCore.loadText;
-
 public class ActivityFileParser implements IActivityFileParser {
     private static final List<String> callbacks =
-            Arrays.asList("onCreate", "onStart", "onResume", "onPause", "onStop", "onDestroy");
+            Arrays.asList(
+                    "onCreate",
+                    "onStart",
+                    "onResume",
+                    "onPause",
+                    "onStop",
+                    "onDestroy");
 
     @Override
-    public Optional<LifecycleAwareComponent> parse(VirtualFile lifecycleImplementation) throws Exception {
+    public Optional<LifecycleAwareComponent> parse(
+            String activityCode,
+            String activityName) throws Exception {
+
         CompilationUnit parseResult =
-                StaticJavaParser.parse(loadText(lifecycleImplementation));
+                StaticJavaParser.parse(activityCode);
 
         Optional<ClassOrInterfaceDeclaration> lifecycleComponentClassDeclaration =
                 getActivityClass(parseResult);
@@ -45,7 +51,7 @@ public class ActivityFileParser implements IActivityFileParser {
 
                 if (callbacks.contains(n.getName().asString())) {
                     lifecycleEventHandlers.add(
-                            toLifecycleEventHandler(n, lifecycleImplementation.getName()));
+                            toLifecycleEventHandler(n, activityName));
                 }
             }
         }.visit(parseResult, null);
@@ -58,11 +64,12 @@ public class ActivityFileParser implements IActivityFileParser {
                                                 .get()
                                                 .getRange()
                                                 .get(),
-                                        lifecycleImplementation.getName()),
+                                        activityName),
                                 lifecycleEventHandlers));
     }
 
-    private Optional<ClassOrInterfaceDeclaration> getActivityClass(CompilationUnit parseResult) {
+    private Optional<ClassOrInterfaceDeclaration> getActivityClass(
+            CompilationUnit parseResult) {
         List<ClassOrInterfaceDeclaration> classes = new ArrayList<>();
 
         new VoidVisitorAdapter<Object>() {
@@ -80,7 +87,9 @@ public class ActivityFileParser implements IActivityFileParser {
         return Optional.empty();
     }
 
-    private LifecycleEventHandler toLifecycleEventHandler(MethodDeclaration declaration, String fileName) {
+    private LifecycleEventHandler toLifecycleEventHandler(
+            MethodDeclaration declaration,
+            String fileName) {
         return
                 new LifecycleEventHandler(
                         declaration.getNameAsString(),
@@ -89,7 +98,9 @@ public class ActivityFileParser implements IActivityFileParser {
                         new ArrayList<>());
     }
 
-    private Location toLocation(Range range, String fileName) {
+    private Location toLocation(
+            Range range,
+            String fileName) {
         return
                 new Location(
                         fileName,
