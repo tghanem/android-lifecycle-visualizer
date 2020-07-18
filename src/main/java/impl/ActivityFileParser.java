@@ -1,11 +1,10 @@
 package impl;
 
-import com.github.javaparser.Range;
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.intellij.openapi.project.IndexNotReadyException;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiMethod;
 import impl.model.dstl.LifecycleAwareComponent;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.Location;
@@ -28,82 +27,37 @@ public class ActivityFileParser implements IActivityFileParser {
 
     @Override
     public Optional<LifecycleAwareComponent> parse(
-            String activityCode,
-            String activityName) throws Exception {
+            PsiFile file) throws Exception {
 
-        CompilationUnit parseResult =
-                StaticJavaParser.parse(activityCode);
+        PsiJavaFile asJava = (PsiJavaFile) file;
+        PsiClass[] classes = asJava.getClasses();
 
-        Optional<ClassOrInterfaceDeclaration> lifecycleComponentClassDeclaration =
-                getActivityClass(parseResult);
-
-        if (!lifecycleComponentClassDeclaration.isPresent()) {
+        if (classes.length == 0) {
             return Optional.empty();
         }
 
-        List<LifecycleEventHandler> lifecycleEventHandlers =
+        List<LifecycleEventHandler> handlers =
                 new ArrayList<>();
 
-        new VoidVisitorAdapter<Object>() {
-            @Override
-            public void visit(MethodDeclaration n, Object arg) {
-                super.visit(n, arg);
-
-                if (callbacks.contains(n.getName().asString())) {
-                    lifecycleEventHandlers.add(
-                            toLifecycleEventHandler(n, activityName));
+        try {
+            for (PsiMethod method : classes[0].getAllMethods()) {
+                if (callbacks.contains(method.getName())) {
+                    handlers.add(
+                            new LifecycleEventHandler(
+                                    method.getName(),
+                                    new Location(file.getName(), method.getTextOffset()),
+                                    new ArrayList<>(),
+                                    new ArrayList<>()));
                 }
             }
-        }.visit(parseResult, null);
+        } catch (IndexNotReadyException ex) {
+            return Optional.empty();
+        }
 
         return
                 Optional.of(
                         new LifecycleAwareComponent(
-                                toLocation(
-                                        lifecycleComponentClassDeclaration
-                                                .get()
-                                                .getRange()
-                                                .get(),
-                                        activityName),
-                                lifecycleEventHandlers));
-    }
-
-    private Optional<ClassOrInterfaceDeclaration> getActivityClass(
-            CompilationUnit parseResult) {
-        List<ClassOrInterfaceDeclaration> classes = new ArrayList<>();
-
-        new VoidVisitorAdapter<Object>() {
-            @Override
-            public void visit(ClassOrInterfaceDeclaration n, Object arg) {
-                super.visit(n, arg);
-                classes.add(n);
-            }
-        }.visit(parseResult, null);
-
-        if (classes.size() > 0) {
-            return Optional.of(classes.get(0));
-        }
-
-        return Optional.empty();
-    }
-
-    private LifecycleEventHandler toLifecycleEventHandler(
-            MethodDeclaration declaration,
-            String fileName) {
-        return
-                new LifecycleEventHandler(
-                        declaration.getNameAsString(),
-                        toLocation(declaration.getRange().get(), fileName),
-                        new ArrayList<>(),
-                        new ArrayList<>());
-    }
-
-    private Location toLocation(
-            Range range,
-            String fileName) {
-        return
-                new Location(
-                        fileName,
-                        range.begin.line);
+                                new Location(file.getName(), classes[0].getTextOffset()),
+                                handlers));
     }
 }

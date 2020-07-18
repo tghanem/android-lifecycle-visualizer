@@ -1,7 +1,7 @@
 package interfaces;
 
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
 
 public interface IActivityFileProcessor {
-    void Process(VirtualFile file) throws Exception;
+    void Process(PsiFile file) throws Exception;
 }

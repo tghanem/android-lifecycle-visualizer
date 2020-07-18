@@ -1,8 +1,6 @@
 package impl.services;
 
 import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import impl.Helper;
 import interfaces.IActivityFileProcessor;
@@ -16,9 +14,9 @@ import java.util.Optional;
 
 public class FileProcessorService implements IFileProcessor {
     @Override
-    public void setCurrentlyOpenedFile(Project project, VirtualFile file) throws Exception {
+    public void setCurrentlyOpenedFile(PsiFile file) throws Exception {
         Optional<PsiFile> androidManifestFile =
-                Helper.findAndroidManifestFile(project);
+                Helper.findAndroidManifestFile(file.getProject());
 
         if (!androidManifestFile.isPresent()) {
             return;

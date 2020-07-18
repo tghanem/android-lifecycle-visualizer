@@ -1,8 +1,7 @@
 package interfaces;
 
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
 
 public interface IFileProcessor {
-    void setCurrentlyOpenedFile(Project project, VirtualFile file) throws Exception;
+    void setCurrentlyOpenedFile(PsiFile file) throws Exception;
 }

@@ -5,6 +5,8 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import interfaces.IFileProcessor;
 import interfaces.INotificationService;
 import org.jetbrains.annotations.NotNull;
@@ -13,9 +15,14 @@ public class FileOpenListener implements FileEditorManagerListener {
     @Override
     public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         try {
+            PsiFile psiFile =
+                PsiManager
+                        .getInstance(source.getProject())
+                        .findFile(file);
+
             ServiceManager
                     .getService(IFileProcessor.class)
-                    .setCurrentlyOpenedFile(source.getProject(), file);
+                    .setCurrentlyOpenedFile(psiFile);
         } catch (Exception e) {
             ServiceManager
                     .getService(INotificationService.class)
@@ -26,9 +33,14 @@ public class FileOpenListener implements FileEditorManagerListener {
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent event) {
         try {
+            PsiFile psiFile =
+                    PsiManager
+                            .getInstance(event.getManager().getProject())
+                            .findFile(event.getNewFile());
+
             ServiceManager
                     .getService(IFileProcessor.class)
-                    .setCurrentlyOpenedFile(event.getManager().getProject(), event.getNewFile());
+                    .setCurrentlyOpenedFile(psiFile);
         } catch (Exception e) {
             ServiceManager
                     .getService(INotificationService.class)
