@@ -2,13 +2,13 @@ package impl.graphics;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class LifecyclePanel extends JPanel {
     public LifecyclePanel() {
-        levelNodes = Optional.empty();
+        graphRoot = Optional.empty();
         subtreeVisibleHashMap = new HashMap<>();
     }
 
@@ -26,7 +26,7 @@ public class LifecyclePanel extends JPanel {
                             repaint();
                         });
 
-        levelNodes = Optional.of(getLevelNodes(root));
+        graphRoot = Optional.of(root);
     }
 
     private void processNodeClicked(
@@ -34,7 +34,7 @@ public class LifecyclePanel extends JPanel {
 
         if (node instanceof LifecycleHandlerNode) {
             LifecycleHandlerNode lifecycleHandlerNode =
-                    (LifecycleHandlerNode)node;
+                    (LifecycleHandlerNode) node;
 
             Boolean subtreeVisible =
                     subtreeVisibleHashMap.get(node);
@@ -58,7 +58,7 @@ public class LifecyclePanel extends JPanel {
             boolean visibility) {
 
         if (node instanceof LifecycleHandlerNode) {
-            LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode)node;
+            LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode) node;
             for (LifecycleNode child : lifecycleHandlerNode.getChildren()) {
                 setNodeVisibility(child, visibility);
             }
@@ -73,58 +73,55 @@ public class LifecyclePanel extends JPanel {
 
         super.paintComponent(graphics);
 
-        if (!levelNodes.isPresent()) {
+        if (!graphRoot.isPresent()) {
             return;
         }
 
         removeAll();
         setLayout(null);
-        paintComponent((Graphics2D) graphics);
+
+        paintComponent(
+                graphRoot.get(),
+                new HashSet<>(),
+                0,
+                50,
+                200);
     }
 
     private void paintComponent(
-            Graphics2D graphics) {
+            LifecycleNode node,
+            HashSet<LifecycleNode> drawnNodes,
+            int nodeIndex,
+            int topMargin,
+            int leftMargin) {
 
-        HashSet<LifecycleNode> drawnNodes =
-                new HashSet<>();
+        add(node);
 
-        Insets insets = getInsets();
+        node.setBounds(
+                leftMargin + nodeIndex * (100 + 50),
+                topMargin,
+                100,
+                30);
 
-        List<List<LifecycleNode>> rows = levelNodes.get();
+        drawnNodes.add(node);
 
-        int topMargin = insets.top + 50;
+        if (node instanceof LifecycleHandlerNode) {
+            LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode) node;
+            List<LifecycleNode> children = lifecycleHandlerNode.getChildren();
+            int effectiveColumnIndex = 0;
 
-        for (int i = 0; i < rows.size(); i++) {
-            int leftMargin = insets.left + 200;
+            for (int i = 0; i < children.size(); i++) {
+                if (!drawnNodes.contains(children.get(i))) {
+                    paintComponent(
+                            children.get(i),
+                            drawnNodes,
+                            effectiveColumnIndex,
+                            topMargin + 30 + 50,
+                            leftMargin);
 
-            for (int j = 0; j < rows.get(i).size(); j++) {
-                LifecycleNode node = rows.get(i).get(j);
-
-                if (drawnNodes.contains(node)) {
-                    continue;
+                    effectiveColumnIndex++;
                 }
-
-                Dimension nodeSize = node.getPreferredSize();
-
-                add(node);
-
-                node.setBounds(
-                        leftMargin,
-                        topMargin,
-                        100,
-                        30);
-
-                drawnNodes.add(node);
-
-                leftMargin += nodeSize.width + 50;
             }
-
-            topMargin +=
-                    rows
-                            .get(i)
-                            .get(0)
-                            .getPreferredSize()
-                            .height + 50;
         }
     }
 
@@ -187,54 +184,6 @@ public class LifecyclePanel extends JPanel {
         return onCreate;
     }
 
-    private List<List<LifecycleNode>> getLevelNodes(
-            LifecycleNode node) {
-
-        HashSet<LifecycleNode> countedNodes =
-                new HashSet<>();
-
-        List<List<LifecycleNode>> levelNodes =
-                new ArrayList<>();
-
-        levelNodes.add(Arrays.asList(node));
-
-        traverseGetLevelNodes(
-                Arrays.asList(node),
-                countedNodes,
-                levelNodes);
-
-        return levelNodes;
-    }
-
-    private void traverseGetLevelNodes(
-            List<LifecycleNode> nodes,
-            HashSet<LifecycleNode> countedNodes,
-            List<List<LifecycleNode>> levelNodes) {
-
-        List<LifecycleNode> nextLevelNodes =
-                new ArrayList<>();
-
-        for (LifecycleNode node : nodes) {
-            if (!countedNodes.contains(node)) {
-                if (node instanceof LifecycleHandlerNode) {
-                    for (LifecycleNode child : ((LifecycleHandlerNode)node).getChildren()) {
-                        nextLevelNodes.add(child);
-                    }
-                }
-                countedNodes.add(node);
-            }
-        }
-
-        if (nextLevelNodes.size() > 0) {
-            levelNodes.add(nextLevelNodes);
-
-            traverseGetLevelNodes(
-                    nextLevelNodes,
-                    countedNodes,
-                    levelNodes);
-        }
-    }
-
-    private Optional<List<List<LifecycleNode>>> levelNodes;
+    private Optional<LifecycleNode> graphRoot;
     private HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap;
 }
