@@ -1,7 +1,9 @@
 package interfaces;
 
-import impl.graphics.LifecycleHandlerCollection;
+import impl.model.dstl.LifecycleEventHandler;
+
+import java.util.List;
 
 public interface IActivityViewProvider {
-    void display(LifecycleHandlerCollection handlers);
+    void display(List<LifecycleEventHandler> handlers);
 }

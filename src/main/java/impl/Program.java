@@ -1,6 +1,5 @@
 package impl;
 
-import impl.graphics.LifecycleHandlerCollection;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
@@ -8,13 +7,11 @@ import windows.ActivityForm;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Program {
     public static void main(String[] args) {
-        LifecycleHandlerCollection collection =
-                new LifecycleHandlerCollection();
-
         List<ResourceAcquisition> acquisitions =
                 new ArrayList<>();
 
@@ -50,12 +47,9 @@ public class Program {
                         new ArrayList<>(),
                         releases);
 
-        collection.add(onResume);
-        collection.add(onPause);
-
         ActivityForm form = new ActivityForm();
 
-        form.display(collection);
+        form.display(Arrays.asList(onResume, onPause));
 
         JFrame frame = new JFrame();
         frame.setSize(600, 800);

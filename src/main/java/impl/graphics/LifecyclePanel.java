@@ -1,7 +1,14 @@
 package impl.graphics;
 
+import impl.model.dstl.LifecycleEventHandler;
+import impl.model.dstl.ResourceAcquisition;
+import impl.model.dstl.ResourceRelease;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
 import java.util.*;
 import java.util.List;
@@ -14,7 +21,7 @@ public class LifecyclePanel extends JPanel {
     }
 
     public void populate(
-            LifecycleHandlerCollection handlers) {
+            List<LifecycleEventHandler> handlers) {
 
         subtreeVisibleHashMap.clear();
 
@@ -174,41 +181,41 @@ public class LifecyclePanel extends JPanel {
     }
 
     private LifecycleHandlerNode buildLifecycleGraph(
-            LifecycleHandlerCollection handlers,
+            List<LifecycleEventHandler> handlers,
             Consumer<LifecycleNode> repaint) {
 
         LifecycleHandlerNode onCreate =
-                handlers.buildLifecycleHandlerNode("onCreate", repaint);
+                buildLifecycleHandlerNode(handlers, "onCreate", repaint);
 
         onCreate.setVisible(true);
 
         LifecycleHandlerNode onStart =
-                handlers.buildLifecycleHandlerNode("onStart", repaint);
+                buildLifecycleHandlerNode(handlers, "onStart", repaint);
 
         onCreate.addLink(0, onStart, false);
 
         LifecycleHandlerNode onResume =
-                handlers.buildLifecycleHandlerNode("onResume", repaint);
+                buildLifecycleHandlerNode(handlers, "onResume", repaint);
 
         onStart.addLink(0, onResume, false);
 
         LifecycleHandlerNode onPause =
-                handlers.buildLifecycleHandlerNode("onPause", repaint);
+                buildLifecycleHandlerNode(handlers, "onPause", repaint);
 
         onResume.addLink(0, onPause, false);
 
         LifecycleHandlerNode onStop =
-                handlers.buildLifecycleHandlerNode("onStop", repaint);
+                buildLifecycleHandlerNode(handlers, "onStop", repaint);
 
         onPause.addLink(0, onResume, true);
         onPause.addLink(0, onStop, false);
         onPause.addLink(0, onCreate, true);
 
         LifecycleHandlerNode onRestart =
-                handlers.buildLifecycleHandlerNode("onRestart", repaint);
+                buildLifecycleHandlerNode(handlers, "onRestart", repaint);
 
         LifecycleHandlerNode onDestroy =
-                handlers.buildLifecycleHandlerNode("onDestroy", repaint);
+                buildLifecycleHandlerNode(handlers, "onDestroy", repaint);
 
         onStop.addLink(0, onRestart, false);
         onStop.addLink(0, onDestroy, false);
@@ -223,6 +230,85 @@ public class LifecyclePanel extends JPanel {
         subtreeVisibleHashMap.put(onDestroy, false);
 
         return onCreate;
+    }
+
+    private Optional<LifecycleEventHandler> findByName(
+            List<LifecycleEventHandler> handlers,
+            String handlerName) {
+
+        for (LifecycleEventHandler handler : handlers) {
+            if (handler.getName().equals(handlerName)) {
+                return Optional.of(handler);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private LifecycleHandlerNode buildLifecycleHandlerNode(
+            List<LifecycleEventHandler> handlers,
+            String handlerName,
+            Consumer<LifecycleNode> repaint) {
+
+        Optional<LifecycleEventHandler> handler =
+                findByName(handlers, handlerName);
+
+        LifecycleHandlerNode node =
+                new LifecycleHandlerNode(handler, handlerName);
+
+        if (handler.isPresent()) {
+            for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
+                node.addLink(
+                        new ResourceAcquisitionLifecycleNode(
+                                resourceAcquisition.getResourceName(),
+                                resourceAcquisition),
+                        false);
+            }
+
+            for (ResourceRelease resourceRelease : handler.get().getResourceReleases()) {
+                node.addLink(
+                        new ResourceReleaseLifecycleNode(
+                                resourceRelease.getResourceName(),
+                                resourceRelease),
+                        false);
+            }
+        }
+
+        node.addActionListener(n -> repaint.accept(node));
+
+        node.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent mouseEvent) {
+                        if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                            JPopupMenu menu = new JPopupMenu();
+
+                            if (!handler.isPresent()) {
+                                menu.add(
+                                        new JMenuItem(
+                                                new AbstractAction("Add Handler") {
+                                                    @Override
+                                                    public void actionPerformed(ActionEvent actionEvent) {
+                                                    }
+                                                }));
+                            } else {
+                                menu.add(
+                                        new JMenuItem(
+                                                new AbstractAction("Go To Handler") {
+                                                    @Override
+                                                    public void actionPerformed(ActionEvent actionEvent) {
+                                                    }
+                                                }));
+                            }
+
+                            menu.show(
+                                    mouseEvent.getComponent(),
+                                    mouseEvent.getX(),
+                                    mouseEvent.getY());
+                        }
+                    }
+                });
+
+        return node;
     }
 
     private Optional<LifecycleHandlerNode> graphRoot;

@@ -3,7 +3,6 @@ package impl.services;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.psi.PsiFile;
 import impl.ActivityFileParser;
-import impl.graphics.LifecycleHandlerCollection;
 import impl.model.dstl.LifecycleAwareComponent;
 import interfaces.IActivityFileParser;
 import interfaces.IActivityFileProcessor;
@@ -36,10 +35,9 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
 
         for (IActivityViewProvider provider : viewProviders) {
             provider.display(
-                    new LifecycleHandlerCollection(
-                            activityFileDocument
-                                    .get()
-                                    .getLifecycleEventHandlers()));
+                    activityFileDocument
+                            .get()
+                            .getLifecycleEventHandlers());
         }
     }
 }
