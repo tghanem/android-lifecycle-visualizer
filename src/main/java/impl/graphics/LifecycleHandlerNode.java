@@ -29,12 +29,20 @@ public class LifecycleHandlerNode extends LifecycleNode {
         return result;
     }
 
+    public void addLink(int index, LifecycleNode node, boolean isCircular) {
+        addLink(index, new LifecycleLink(node, isCircular));
+    }
+
     public void addLink(LifecycleNode node, boolean isCircular) {
         addLink(new LifecycleLink(node, isCircular));
     }
 
     public void addLink(LifecycleLink value) {
         links.add(value);
+    }
+
+    public void addLink(int index, LifecycleLink value) {
+        links.add(index, value);
     }
 
     public void traverse(LifecycleNodeConsumer consumer) {

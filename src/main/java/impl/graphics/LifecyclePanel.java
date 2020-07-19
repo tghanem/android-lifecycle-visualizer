@@ -101,36 +101,41 @@ public class LifecyclePanel extends JPanel {
             }
         }
 
-        double rowHeight = (double) getHeight() / rows.size();
-        double nodeHeight = 0.5 * rowHeight;
-        double paddingHeight = 0.5 * rowHeight;
+        double canvasHeight = getHeight();
+        double canvasWidth = getWidth();
 
-        double rowWidth = (double) getWidth() / maxCount;
-        double nodeWidth = 0.5 * rowWidth;
-        double paddingWidth = 0.5 * rowWidth;
+        double nodeAreaHeight = canvasHeight / rows.size();
+        double nodeAreaWidth = canvasWidth / maxCount;
 
         double topMargin = 0;
 
         for (int i = 0; i < rows.size(); i++) {
-            double leftMargin = 0;
+            double rowInternalPadding =
+                    (canvasWidth - (nodeAreaWidth * rows.get(i).size())) / (rows.get(i).size() + 1);
+
+            double leftMargin = rowInternalPadding;
 
             for (int j = 0; j < rows.get(i).size(); j++) {
                 LifecycleNode lifecycleNode = rows.get(i).get(j);
 
                 add(lifecycleNode);
 
+                double nodeWidth = nodeAreaWidth * 0.5;
+                double nodeHeight = nodeAreaHeight * 0.5;
+                double nodeLeftMargin = leftMargin + nodeWidth * 0.5;
+                double nodeTopMargin = topMargin + nodeHeight * 0.5;
+
                 lifecycleNode
                         .setBounds(
-                                (int) leftMargin,
-                                (int) topMargin,
+                                (int) nodeLeftMargin,
+                                (int) nodeTopMargin,
                                 (int) nodeWidth,
                                 (int) nodeHeight);
 
-
-                leftMargin += nodeWidth + paddingWidth;
+                leftMargin += nodeAreaWidth + rowInternalPadding;
             }
 
-            topMargin += nodeHeight + paddingHeight;
+            topMargin += nodeAreaHeight;
         }
 
         Graphics2D g2 = (Graphics2D) graphics;
@@ -180,24 +185,24 @@ public class LifecyclePanel extends JPanel {
         LifecycleHandlerNode onStart =
                 handlers.buildLifecycleHandlerNode("onStart", repaint);
 
-        onCreate.addLink(onStart, false);
+        onCreate.addLink(0, onStart, false);
 
         LifecycleHandlerNode onResume =
                 handlers.buildLifecycleHandlerNode("onResume", repaint);
 
-        onStart.addLink(onResume, false);
+        onStart.addLink(0, onResume, false);
 
         LifecycleHandlerNode onPause =
                 handlers.buildLifecycleHandlerNode("onPause", repaint);
 
-        onResume.addLink(onPause, false);
+        onResume.addLink(0, onPause, false);
 
         LifecycleHandlerNode onStop =
                 handlers.buildLifecycleHandlerNode("onStop", repaint);
 
-        onPause.addLink(onResume, true);
-        onPause.addLink(onStop, false);
-        onPause.addLink(onCreate, true);
+        onPause.addLink(0, onResume, true);
+        onPause.addLink(0, onStop, false);
+        onPause.addLink(0, onCreate, true);
 
         LifecycleHandlerNode onRestart =
                 handlers.buildLifecycleHandlerNode("onRestart", repaint);
@@ -205,9 +210,9 @@ public class LifecyclePanel extends JPanel {
         LifecycleHandlerNode onDestroy =
                 handlers.buildLifecycleHandlerNode("onDestroy", repaint);
 
-        onStop.addLink(onRestart, false);
-        onStop.addLink(onDestroy, false);
-        onStop.addLink(onCreate, true);
+        onStop.addLink(0, onRestart, false);
+        onStop.addLink(0, onDestroy, false);
+        onStop.addLink(0, onCreate, true);
 
         subtreeVisibleHashMap.put(onCreate, false);
         subtreeVisibleHashMap.put(onStart, false);

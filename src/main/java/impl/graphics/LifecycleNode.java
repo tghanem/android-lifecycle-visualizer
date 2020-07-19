@@ -7,6 +7,7 @@ public abstract class LifecycleNode extends JButton {
     public LifecycleNode(String name) {
         super(name);
         this.name = name;
+        setVisible(false);
     }
 
     public String getName() {

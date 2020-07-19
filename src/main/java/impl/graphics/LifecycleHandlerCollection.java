@@ -10,6 +10,10 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public class LifecycleHandlerCollection extends ArrayList<LifecycleEventHandler> {
+    public LifecycleHandlerCollection() {
+        super();
+    }
+
     public LifecycleHandlerCollection(Collection<LifecycleEventHandler> collection) {
         super(collection);
     }
@@ -34,13 +38,13 @@ public class LifecycleHandlerCollection extends ArrayList<LifecycleEventHandler>
             for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
                 node.addLink(
                         new ResourceAcquisitionLifecycleNode(
-                                resourceAcquisition.getResourceName(),
-                                resourceAcquisition),
+                            resourceAcquisition.getResourceName(),
+                            resourceAcquisition),
                         false);
             }
 
             for (ResourceRelease resourceRelease : handler.get().getResourceReleases()) {
-                node.add(
+                node.addLink(
                         new ResourceReleaseLifecycleNode(
                                 resourceRelease.getResourceName(),
                                 resourceRelease),
