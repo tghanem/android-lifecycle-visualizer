@@ -1,32 +1,15 @@
 package impl.model.dstl;
 
-import impl.exceptions.MissingElementException;
-import org.w3c.dom.Element;
+import com.intellij.psi.PsiElement;
 
 public class ResourceRelease {
-    public static final String XML_ELEMENT_NAME = "ResourceRelease";
-
-    public ResourceRelease(String resourceName, Location location) {
-        this.resourceName = resourceName;
-        this.location = location;
+    public ResourceRelease(PsiElement element) {
+        this.element = element;
     }
 
-    public static ResourceRelease valueOf(Element element) {
-        return
-                new ResourceRelease(
-                        element.getAttribute("ResourceName"),
-                        Location.valueOf(element.getChildNodes())
-                                .orElseThrow(() -> new MissingElementException("Location element not found")));
+    public PsiElement getPsiElement() {
+        return element;
     }
 
-    public String getResourceName() {
-        return resourceName;
-    }
-
-    public Location getLocation() {
-        return location;
-    }
-
-    private final String resourceName;
-    private final Location location;
+    private final PsiElement element;
 }

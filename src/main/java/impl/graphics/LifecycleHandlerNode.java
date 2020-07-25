@@ -2,47 +2,40 @@ package impl.graphics;
 
 import impl.model.dstl.LifecycleEventHandler;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class LifecycleHandlerNode extends LifecycleNode {
-    public LifecycleHandlerNode(Optional<LifecycleEventHandler> handler, String name) {
+    public LifecycleHandlerNode(Optional<LifecycleEventHandler> handler, String name) throws IOException {
         super(name);
 
         this.handler = handler;
-        this.links = new ArrayList<>();
-        this.setVisible(false);
-    }
+        this.nextNodes = new ArrayList<>();
 
-    public List<LifecycleLink> getLinks() {
-        return links;
-    }
-
-    public List<LifecycleLink> getNonCircularLinks() {
-        List<LifecycleLink> result = new ArrayList<>();
-        for (LifecycleLink link : links) {
-            if (!link.isCircular()) {
-                result.add(link);
-            }
+        if (!handler.isPresent()) {
+            this.setForeground(Color.GRAY);
+            this.setBackground(Color.LIGHT_GRAY);
         }
-        return result;
+
+        this.setVisible(false);
+        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("handler.png")));
     }
 
-    public void addLink(int index, LifecycleNode node, boolean isCircular) {
-        addLink(index, new LifecycleLink(node, isCircular));
+    public List<LifecycleNode> getNextNodes() {
+        return nextNodes;
     }
 
-    public void addLink(LifecycleNode node, boolean isCircular) {
-        addLink(new LifecycleLink(node, isCircular));
+    public void addNextNode(LifecycleNode value) {
+        nextNodes.add(value);
     }
 
-    public void addLink(LifecycleLink value) {
-        links.add(value);
-    }
-
-    public void addLink(int index, LifecycleLink value) {
-        links.add(index, value);
+    public void addNextNode(int index, LifecycleNode value) {
+        nextNodes.add(index, value);
     }
 
     public void traverse(LifecycleNodeConsumer consumer) {
@@ -59,17 +52,12 @@ public class LifecycleHandlerNode extends LifecycleNode {
         if (node instanceof LifecycleHandlerNode) {
             LifecycleHandlerNode handlerNode = (LifecycleHandlerNode) node;
 
-            for (LifecycleLink link : handlerNode.getLinks()) {
-                if (!link.isCircular()) {
-                    traverseInternal(
-                            depth + 1,
-                            link.getTarget(),
-                            processNode);
-                }
+            for (LifecycleNode link : handlerNode.getNextNodes()) {
+                traverseInternal(depth + 1, link, processNode);
             }
         }
     }
 
-    private final List<LifecycleLink> links;
+    private final List<LifecycleNode> nextNodes;
     private final Optional<LifecycleEventHandler> handler;
 }

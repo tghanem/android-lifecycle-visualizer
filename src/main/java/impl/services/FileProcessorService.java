@@ -43,7 +43,7 @@ public class FileProcessorService implements IFileProcessor {
         if (isActivityFile) {
             ServiceManager
                     .getService(IActivityFileProcessor.class)
-                    .Process(file);
+                    .process(file);
         }
     }
 

@@ -3,6 +3,7 @@ package impl.services;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.psi.PsiFile;
 import impl.ActivityFileParser;
+import impl.graphics.ActivityMetadataToRender;
 import impl.model.dstl.LifecycleAwareComponent;
 import interfaces.IActivityFileParser;
 import interfaces.IActivityFileProcessor;
@@ -20,7 +21,7 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
     }
 
     @Override
-    public void Process(PsiFile file) throws Exception {
+    public void process(PsiFile file) throws Exception {
         Optional<LifecycleAwareComponent> activityFileDocument =
                 lifecycleParser.parse(file);
 
@@ -34,10 +35,13 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
                         .getViewProviders();
 
         for (IActivityViewProvider provider : viewProviders) {
+            LifecycleAwareComponent component =
+                    activityFileDocument.get();
+
             provider.display(
-                    activityFileDocument
-                            .get()
-                            .getLifecycleEventHandlers());
+                    new ActivityMetadataToRender(
+                            component.getPsiElement(),
+                            component.getLifecycleEventHandlers()));
         }
     }
 }

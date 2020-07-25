@@ -1,8 +1,10 @@
 package impl.graphics;
 
+import com.intellij.openapi.components.ServiceManager;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
+import interfaces.IActivityFileModifier;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,13 +24,13 @@ public class LifecyclePanel extends JPanel {
     }
 
     public void populate(
-            List<LifecycleEventHandler> handlers) {
+            ActivityMetadataToRender metadata) throws IOException {
 
         subtreeVisibleHashMap.clear();
 
         LifecycleHandlerNode root =
                 buildLifecycleGraph(
-                        handlers,
+                        metadata,
                         node -> {
                             processNodeClicked(node);
                             revalidate();
@@ -48,13 +51,13 @@ public class LifecyclePanel extends JPanel {
                     subtreeVisibleHashMap.get(node);
 
             if (!subtreeVisible) {
-                for (LifecycleLink link : lifecycleHandlerNode.getNonCircularLinks()) {
-                    link.getTarget().setVisible(true);
+                for (LifecycleNode nextNode : lifecycleHandlerNode.getNextNodes()) {
+                    nextNode.setVisible(true);
                 }
                 subtreeVisibleHashMap.replace(node, true);
             } else {
-                for (LifecycleLink link : lifecycleHandlerNode.getNonCircularLinks()) {
-                    setNodeVisibility(link.getTarget(), false);
+                for (LifecycleNode nextNode : lifecycleHandlerNode.getNextNodes()) {
+                    setNodeVisibility(nextNode, false);
                 }
                 subtreeVisibleHashMap.replace(node, false);
             }
@@ -67,11 +70,12 @@ public class LifecyclePanel extends JPanel {
 
         if (node instanceof LifecycleHandlerNode) {
             LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode) node;
-            for (LifecycleLink link : lifecycleHandlerNode.getNonCircularLinks()) {
-                setNodeVisibility(link.getTarget(), visibility);
+            for (LifecycleNode nextNode : lifecycleHandlerNode.getNextNodes()) {
+                setNodeVisibility(nextNode, visibility);
             }
             subtreeVisibleHashMap.replace(node, false);
         }
+
         node.setVisible(visibility);
     }
 
@@ -152,14 +156,12 @@ public class LifecyclePanel extends JPanel {
                 if (node instanceof LifecycleHandlerNode) {
                     LifecycleHandlerNode handlerNode = (LifecycleHandlerNode) node;
 
-                    for (LifecycleLink link : handlerNode.getLinks()) {
-                        if (link.getTarget().isVisible()) {
-                            if (!link.isCircular()) {
-                                drawNonCircularLine(
-                                        g2,
-                                        node.getBounds(),
-                                        link.getTarget().getBounds());
-                            }
+                    for (LifecycleNode nextNode : handlerNode.getNextNodes()) {
+                        if (nextNode.isVisible()) {
+                            drawNonCircularLine(
+                                    g2,
+                                    node.getBounds(),
+                                    nextNode.getBounds());
                         }
                     }
                 }
@@ -181,45 +183,45 @@ public class LifecyclePanel extends JPanel {
     }
 
     private LifecycleHandlerNode buildLifecycleGraph(
-            List<LifecycleEventHandler> handlers,
-            Consumer<LifecycleNode> repaint) {
+            ActivityMetadataToRender metadata,
+            Consumer<LifecycleNode> repaint) throws IOException {
 
         LifecycleHandlerNode onCreate =
-                buildLifecycleHandlerNode(handlers, "onCreate", repaint);
+                buildLifecycleHandlerNode(metadata, "onCreate", repaint);
 
         onCreate.setVisible(true);
 
         LifecycleHandlerNode onStart =
-                buildLifecycleHandlerNode(handlers, "onStart", repaint);
+                buildLifecycleHandlerNode(metadata, "onStart", repaint);
 
-        onCreate.addLink(0, onStart, false);
+        onCreate.addNextNode(0, onStart);
 
         LifecycleHandlerNode onResume =
-                buildLifecycleHandlerNode(handlers, "onResume", repaint);
+                buildLifecycleHandlerNode(metadata, "onResume", repaint);
 
-        onStart.addLink(0, onResume, false);
+        onStart.addNextNode(0, onResume);
 
         LifecycleHandlerNode onPause =
-                buildLifecycleHandlerNode(handlers, "onPause", repaint);
+                buildLifecycleHandlerNode(metadata, "onPause", repaint);
 
-        onResume.addLink(0, onPause, false);
+        onResume.addNextNode(0, onPause);
 
         LifecycleHandlerNode onStop =
-                buildLifecycleHandlerNode(handlers, "onStop", repaint);
+                buildLifecycleHandlerNode(metadata, "onStop", repaint);
 
-        onPause.addLink(0, onResume, true);
-        onPause.addLink(0, onStop, false);
-        onPause.addLink(0, onCreate, true);
+        onPause.addNextNode(0, new CircularLifecycleNode(onResume));
+        onPause.addNextNode(0, new CircularLifecycleNode(onCreate));
+        onPause.addNextNode(0, onStop);
 
         LifecycleHandlerNode onRestart =
-                buildLifecycleHandlerNode(handlers, "onRestart", repaint);
+                buildLifecycleHandlerNode(metadata, "onRestart", repaint);
 
         LifecycleHandlerNode onDestroy =
-                buildLifecycleHandlerNode(handlers, "onDestroy", repaint);
+                buildLifecycleHandlerNode(metadata, "onDestroy", repaint);
 
-        onStop.addLink(0, onRestart, false);
-        onStop.addLink(0, onDestroy, false);
-        onStop.addLink(0, onCreate, true);
+        onStop.addNextNode(0, onRestart);
+        onStop.addNextNode(0, onDestroy);
+        onStop.addNextNode(0, new CircularLifecycleNode(onCreate));
 
         subtreeVisibleHashMap.put(onCreate, false);
         subtreeVisibleHashMap.put(onStart, false);
@@ -237,7 +239,7 @@ public class LifecyclePanel extends JPanel {
             String handlerName) {
 
         for (LifecycleEventHandler handler : handlers) {
-            if (handler.getName().equals(handlerName)) {
+            if (handler.getPsiElement().getName().equals(handlerName)) {
                 return Optional.of(handler);
             }
         }
@@ -245,31 +247,29 @@ public class LifecyclePanel extends JPanel {
     }
 
     private LifecycleHandlerNode buildLifecycleHandlerNode(
-            List<LifecycleEventHandler> handlers,
+            ActivityMetadataToRender metadata,
             String handlerName,
-            Consumer<LifecycleNode> repaint) {
+            Consumer<LifecycleNode> repaint) throws IOException {
 
         Optional<LifecycleEventHandler> handler =
-                findByName(handlers, handlerName);
+                findByName(metadata.getHandlers(), handlerName);
 
         LifecycleHandlerNode node =
                 new LifecycleHandlerNode(handler, handlerName);
 
         if (handler.isPresent()) {
             for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
-                node.addLink(
+                node.addNextNode(
                         new ResourceAcquisitionLifecycleNode(
-                                resourceAcquisition.getResourceName(),
-                                resourceAcquisition),
-                        false);
+                                resourceAcquisition.getPsiElement().getText(),
+                                resourceAcquisition));
             }
 
             for (ResourceRelease resourceRelease : handler.get().getResourceReleases()) {
-                node.addLink(
+                node.addNextNode(
                         new ResourceReleaseLifecycleNode(
-                                resourceRelease.getResourceName(),
-                                resourceRelease),
-                        false);
+                                resourceRelease.getPsiElement().getText(),
+                                resourceRelease));
             }
         }
 
@@ -288,6 +288,11 @@ public class LifecyclePanel extends JPanel {
                                                 new AbstractAction("Add Handler") {
                                                     @Override
                                                     public void actionPerformed(ActionEvent actionEvent) {
+                                                        ServiceManager
+                                                                .getService(IActivityFileModifier.class)
+                                                                .addLifecycleEventHandler(
+                                                                        metadata.getActivityClass(),
+                                                                        handlerName);
                                                     }
                                                 }));
                             } else {

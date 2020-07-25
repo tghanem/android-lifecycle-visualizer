@@ -1,5 +1,7 @@
 package impl;
 
+import com.intellij.psi.impl.source.PsiMethodImpl;
+import impl.graphics.ActivityMetadataToRender;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
@@ -11,50 +13,52 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Program {
-    public static void main(String[] args) {
-        List<ResourceAcquisition> acquisitions =
-                new ArrayList<>();
+    public static void main(String[] args) throws Exception {
+        try {
+            List<ResourceAcquisition> acquisitions =
+                    new ArrayList<>();
 
-        acquisitions.add(
-                new ResourceAcquisition(
-                        "Camera",
-                        null));
+            acquisitions.add(
+                    new ResourceAcquisition(
+                            null));
 
-        acquisitions.add(
-                new ResourceAcquisition(
-                        "Bluetooth",
-                        null));
+            acquisitions.add(
+                    new ResourceAcquisition(
+                            null));
 
-        List<ResourceRelease> releases =
-                new ArrayList<>();
+            List<ResourceRelease> releases =
+                    new ArrayList<>();
 
-        releases.add(
-                new ResourceRelease(
-                        "Camera",
-                        null));
+            releases.add(
+                    new ResourceRelease(
+                            null));
 
-        LifecycleEventHandler onResume =
-                new LifecycleEventHandler(
-                        "onResume",
+            LifecycleEventHandler onResume =
+                    new LifecycleEventHandler(
+                            null,
+                            acquisitions,
+                            new ArrayList<>());
+
+            LifecycleEventHandler onPause =
+                    new LifecycleEventHandler(
+                            null,
+                            new ArrayList<>(),
+                            releases);
+
+            ActivityForm form = new ActivityForm();
+
+            form.display(
+                    new ActivityMetadataToRender(
                         null,
-                        acquisitions,
-                        new ArrayList<>());
+                        Arrays.asList(onResume, onPause)));
 
-        LifecycleEventHandler onPause =
-                new LifecycleEventHandler(
-                        "onPause",
-                        null,
-                        new ArrayList<>(),
-                        releases);
-
-        ActivityForm form = new ActivityForm();
-
-        form.display(Arrays.asList(onResume, onPause));
-
-        JFrame frame = new JFrame();
-        frame.setSize(600, 800);
-        frame.add(form.getContent());
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
+            JFrame frame = new JFrame();
+            frame.setSize(600, 800);
+            frame.add(form.getContent());
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

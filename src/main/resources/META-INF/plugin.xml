@@ -43,5 +43,9 @@
         <applicationService
                 serviceInterface="interfaces.INotificationService"
                 serviceImplementation="impl.services.NotificationService"/>
+
+        <applicationService
+                serviceInterface="interfaces.IActivityFileModifier"
+                serviceImplementation="impl.services.ActivityFileModifierService"/>
     </extensions>
 </idea-plugin>

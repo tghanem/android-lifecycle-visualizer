@@ -1,13 +1,8 @@
 package impl;
 
 import com.intellij.openapi.project.IndexNotReadyException;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiMethod;
-import impl.model.dstl.LifecycleAwareComponent;
-import impl.model.dstl.LifecycleEventHandler;
-import impl.model.dstl.Location;
+import com.intellij.psi.*;
+import impl.model.dstl.*;
 import interfaces.IActivityFileParser;
 import org.jetbrains.kotlin.psi.KtFile;
 
@@ -40,36 +35,51 @@ public class ActivityFileParser implements IActivityFileParser {
         List<LifecycleEventHandler> handlers =
                 new ArrayList<>();
 
+        PsiClass psiClass = classes.get()[0];
+
         try {
-            for (PsiMethod method : classes.get()[0].getAllMethods()) {
+            for (PsiMethod method : psiClass.getAllMethods()) {
                 if (callbacks.contains(method.getName())) {
                     handlers.add(
                             new LifecycleEventHandler(
-                                    method.getName(),
-                                    new Location(file.getName(), method.getTextOffset()),
-                                    new ArrayList<>(),
-                                    new ArrayList<>()));
+                                    method,
+                                    lookupResourceAcquisitions(method),
+                                    lookupResourceReleases(method)));
                 }
             }
         } catch (IndexNotReadyException ex) {
             return Optional.empty();
         }
 
-        return
-                Optional.of(
-                        new LifecycleAwareComponent(
-                                new Location(
-                                        file.getName(),
-                                        classes.get()[0].getTextOffset()),
-                                handlers));
+        return Optional.of(new LifecycleAwareComponent(psiClass, handlers));
+    }
+
+    private List<ResourceAcquisition> lookupResourceAcquisitions(
+            PsiMethod method) {
+
+        List<ResourceAcquisition> result =
+                new ArrayList<>();
+
+
+        return result;
+    }
+
+    private List<ResourceRelease> lookupResourceReleases(
+            PsiMethod method) {
+
+        List<ResourceRelease> result =
+                new ArrayList<>();
+
+
+        return result;
     }
 
     private Optional<PsiClass[]> getClasses(PsiFile file) {
         if (file instanceof PsiJavaFile) {
-            PsiJavaFile javaFile = (PsiJavaFile)file;
+            PsiJavaFile javaFile = (PsiJavaFile) file;
             return Optional.of(javaFile.getClasses());
         } else if (file instanceof KtFile) {
-            KtFile kotlinFile = (KtFile)file;
+            KtFile kotlinFile = (KtFile) file;
             return Optional.of(kotlinFile.getClasses());
         } else {
             return Optional.empty();
