@@ -1,10 +1,11 @@
 package impl;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.pom.Navigatable;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -17,6 +18,23 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class Helper {
+    public static void navigateTo(PsiElement element) {
+        PsiElement navigationElement =
+                element.getNavigationElement();
+
+        if (navigationElement == null) {
+            return;
+        }
+
+        if (navigationElement instanceof Navigatable) {
+            Navigatable asNavigatable = (Navigatable)navigationElement;
+
+            if (asNavigatable.canNavigate()) {
+                asNavigatable.navigate(true);
+            }
+        }
+    }
+
     public static String getExceptionInformation(Exception exception) {
         StringBuilder sb = new StringBuilder();
 
@@ -28,27 +46,6 @@ public class Helper {
         sb.append(sw.toString());
 
         return sb.toString();
-    }
-
-    public static <T> Optional<T> findFirst(
-            NodeList nodeList,
-            String elementName,
-            Function<Element, T> processElement) {
-
-        AtomicReference<Optional<T>> result = new AtomicReference<>(Optional.empty());
-
-        processChildElements(
-                nodeList,
-                element ->
-                {
-                    if (element.getTagName().equals(elementName)) {
-                        result.set(Optional.of(processElement.apply(element)));
-                        return false;
-                    }
-                    return true;
-                });
-
-        return result.get();
     }
 
     public static Optional<Element> findFirst(NodeList nodeList, Predicate<Element> predicate) {

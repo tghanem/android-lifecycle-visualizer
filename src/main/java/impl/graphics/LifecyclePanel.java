@@ -1,6 +1,7 @@
 package impl.graphics;
 
 import com.intellij.openapi.components.ServiceManager;
+import impl.Helper;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
@@ -301,6 +302,7 @@ public class LifecyclePanel extends JPanel {
                                                 new AbstractAction("Go To Handler") {
                                                     @Override
                                                     public void actionPerformed(ActionEvent actionEvent) {
+                                                        Helper.navigateTo(handler.get().getPsiElement());
                                                     }
                                                 }));
                             }
