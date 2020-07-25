@@ -2,14 +2,12 @@ package impl;
 
 import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.psi.*;
+import com.intellij.psi.util.PsiTreeUtil;
 import impl.model.dstl.*;
 import interfaces.IActivityFileParser;
 import org.jetbrains.kotlin.psi.KtFile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class ActivityFileParser implements IActivityFileParser {
     private static final List<String> callbacks =
@@ -53,11 +51,68 @@ public class ActivityFileParser implements IActivityFileParser {
     private List<ResourceAcquisition> lookupResourceAcquisitions(PsiMethod method) {
         List<ResourceAcquisition> result = new ArrayList<>();
 
+        Collection<PsiElement> methodCallExpressions =
+                PsiTreeUtil.findChildrenOfAnyType(method, PsiMethodCallExpression.class);
+
+        for (PsiElement element : methodCallExpressions) {
+            PsiMethodCallExpression methodCallExpression =
+                    (PsiMethodCallExpression) element;
+
+            PsiMethod resolvedMethod =
+                    methodCallExpression.resolveMethod();
+
+            if (resolvedMethod != null) {
+                String returnTypeName =
+                        resolvedMethod.getReturnType().getCanonicalText();
+
+                if (returnTypeName.equals("android.hardware.Camera")) {
+                    result.add(new ResourceAcquisition(element));
+                }
+            }
+        }
+
         return result;
     }
 
     private List<ResourceRelease> lookupResourceReleases(PsiMethod method) {
         List<ResourceRelease> result = new ArrayList<>();
+
+        Collection<PsiElement> methodCallExpressions =
+                PsiTreeUtil.findChildrenOfAnyType(method, PsiMethodCallExpression.class);
+
+        for (PsiElement element : methodCallExpressions) {
+            PsiMethodCallExpression methodCallExpression =
+                    (PsiMethodCallExpression) element;
+
+            PsiElement methodReferenceExpression =
+                    methodCallExpression.getFirstChild();
+
+            if (methodReferenceExpression instanceof PsiReferenceExpression) {
+                PsiReferenceExpression referenceExpression =
+                        (PsiReferenceExpression) methodReferenceExpression;
+
+                if (referenceExpression.getQualifierExpression() != null) {
+                    if (referenceExpression.getQualifierExpression().getType() != null) {
+                        String qualifierName =
+                                referenceExpression
+                                        .getQualifierExpression()
+                                        .getType()
+                                        .getCanonicalText();
+
+                        String[] methodName =
+                                referenceExpression
+                                        .getQualifiedName()
+                                        .split("\\.");
+
+                        if (methodName.length > 1) {
+                            if (qualifierName.equals("android.hardware.Camera") && methodName[1].equals("release")) {
+                                result.add(new ResourceRelease(element));
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         return result;
     }

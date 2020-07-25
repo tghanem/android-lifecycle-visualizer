@@ -33,6 +33,10 @@ public class FileOpenListener implements FileEditorManagerListener {
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent event) {
         try {
+            if (event.getNewFile() == null) {
+                return;
+            }
+
             PsiFile psiFile =
                     PsiManager
                             .getInstance(event.getManager().getProject())

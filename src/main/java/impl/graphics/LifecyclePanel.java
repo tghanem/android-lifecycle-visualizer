@@ -1,6 +1,7 @@
 package impl.graphics;
 
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import impl.Helper;
 import impl.model.dstl.LifecycleEventHandler;
@@ -210,19 +211,21 @@ public class LifecyclePanel extends JPanel {
         LifecycleHandlerNode onStop =
                 buildLifecycleHandlerNode(metadata, "onStop", repaint);
 
-        onPause.addNextNode(0, new CircularLifecycleNode(onResume));
-        onPause.addNextNode(0, new CircularLifecycleNode(onCreate));
+        onPause.addNextNode(0, buildCircularLifecycleNode(metadata, onResume));
+        onPause.addNextNode(0, buildCircularLifecycleNode(metadata, onCreate));
         onPause.addNextNode(0, onStop);
 
         LifecycleHandlerNode onRestart =
                 buildLifecycleHandlerNode(metadata, "onRestart", repaint);
+
+        onRestart.addNextNode(0, buildCircularLifecycleNode(metadata, onStart));
 
         LifecycleHandlerNode onDestroy =
                 buildLifecycleHandlerNode(metadata, "onDestroy", repaint);
 
         onStop.addNextNode(0, onRestart);
         onStop.addNextNode(0, onDestroy);
-        onStop.addNextNode(0, new CircularLifecycleNode(onCreate));
+        onStop.addNextNode(0, buildCircularLifecycleNode(metadata, onCreate));
 
         subtreeVisibleHashMap.put(onCreate, false);
         subtreeVisibleHashMap.put(onStart, false);
@@ -245,6 +248,34 @@ public class LifecyclePanel extends JPanel {
             }
         }
         return Optional.empty();
+    }
+
+    private CircularLifecycleNode buildCircularLifecycleNode(
+            ActivityMetadataToRender metadata,
+            LifecycleHandlerNode target) {
+
+        CircularLifecycleNode node =
+                new CircularLifecycleNode(target);
+
+        node.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent mouseEvent) {
+                        if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                            JPopupMenu menu =
+                                    createLifecycleHandlerNodeMenu(
+                                         metadata.getActivityClass(),
+                                         target);
+
+                            menu.show(
+                                    mouseEvent.getComponent(),
+                                    mouseEvent.getX(),
+                                    mouseEvent.getY());
+                        }
+                    }
+                });
+
+        return node;
     }
 
     private LifecycleHandlerNode buildLifecycleHandlerNode(
@@ -281,40 +312,10 @@ public class LifecyclePanel extends JPanel {
                     @Override
                     public void mousePressed(MouseEvent mouseEvent) {
                         if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                            JPopupMenu menu = new JPopupMenu();
-
-                            if (!node.getHandler().isPresent()) {
-                                menu.add(
-                                        new JMenuItem(
-                                                new AbstractAction("Add Handler") {
-                                                    @Override
-                                                    public void actionPerformed(ActionEvent actionEvent) {
-                                                        PsiMethod handlerElement =
-                                                                ServiceManager
-                                                                        .getService(IActivityFileModifier.class)
-                                                                        .createAndAddLifecycleHandlerMethod(
-                                                                                metadata.getActivityClass(),
-                                                                                handlerName);
-
-                                                        node.setHandler(
-                                                                new LifecycleEventHandler(
-                                                                        handlerElement,
-                                                                        new ArrayList<>(),
-                                                                        new ArrayList<>()));
-
-                                                        Helper.navigateTo(handlerElement);
-                                                    }
-                                                }));
-                            } else {
-                                menu.add(
-                                        new JMenuItem(
-                                                new AbstractAction("Go To Handler") {
-                                                    @Override
-                                                    public void actionPerformed(ActionEvent actionEvent) {
-                                                        Helper.navigateTo(handler.get().getPsiElement());
-                                                    }
-                                                }));
-                            }
+                            JPopupMenu menu =
+                                    createLifecycleHandlerNodeMenu(
+                                            metadata.getActivityClass(),
+                                            node);
 
                             menu.show(
                                     mouseEvent.getComponent(),
@@ -325,6 +326,48 @@ public class LifecyclePanel extends JPanel {
                 });
 
         return node;
+    }
+
+    private JPopupMenu createLifecycleHandlerNodeMenu(
+            PsiClass activityClass,
+            LifecycleHandlerNode node) {
+
+        JPopupMenu menu = new JPopupMenu();
+
+        if (!node.getHandler().isPresent()) {
+            menu.add(
+                    new JMenuItem(
+                            new AbstractAction("Add Handler") {
+                                @Override
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    PsiMethod handlerElement =
+                                            ServiceManager
+                                                    .getService(IActivityFileModifier.class)
+                                                    .createAndAddLifecycleHandlerMethod(
+                                                            activityClass,
+                                                            node.getName());
+
+                                    node.setHandler(
+                                            new LifecycleEventHandler(
+                                                    handlerElement,
+                                                    new ArrayList<>(),
+                                                    new ArrayList<>()));
+
+                                    Helper.navigateTo(handlerElement);
+                                }
+                            }));
+        } else {
+            menu.add(
+                    new JMenuItem(
+                            new AbstractAction("Go To Handler") {
+                                @Override
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    Helper.navigateTo(node.getHandler().get().getPsiElement());
+                                }
+                            }));
+        }
+
+        return menu;
     }
 
     private Optional<LifecycleHandlerNode> graphRoot;
