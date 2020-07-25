@@ -6,8 +6,9 @@ import java.util.Objects;
 public abstract class LifecycleNode extends JButton {
     public LifecycleNode(String name) {
         super(name);
+
         this.name = name;
-        setVisible(false);
+        this.setVisible(false);
     }
 
     public String getName() {

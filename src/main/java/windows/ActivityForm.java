@@ -11,7 +11,7 @@ public class ActivityForm implements IActivityViewProvider {
     private LifecyclePanel panel;
 
     @Override
-    public void display(ActivityMetadataToRender metadata) throws Exception {
+    public void display(ActivityMetadataToRender metadata) {
         panel.populate(metadata);
         panel.revalidate();
         panel.repaint();

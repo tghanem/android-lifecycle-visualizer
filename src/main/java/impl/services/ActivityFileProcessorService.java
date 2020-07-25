@@ -21,9 +21,8 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
     }
 
     @Override
-    public void process(PsiFile file) throws Exception {
-        Optional<LifecycleAwareComponent> activityFileDocument =
-                lifecycleParser.parse(file);
+    public void process(PsiFile file) {
+        Optional<LifecycleAwareComponent> activityFileDocument = lifecycleParser.parse(file);
 
         if (!activityFileDocument.isPresent()) {
             return;

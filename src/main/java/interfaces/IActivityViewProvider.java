@@ -3,5 +3,5 @@ package interfaces;
 import impl.graphics.ActivityMetadataToRender;
 
 public interface IActivityViewProvider {
-    void display(ActivityMetadataToRender metadata) throws Exception;
+    void display(ActivityMetadataToRender metadata);
 }

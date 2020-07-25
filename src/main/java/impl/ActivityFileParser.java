@@ -22,18 +22,14 @@ public class ActivityFileParser implements IActivityFileParser {
                     "onDestroy");
 
     @Override
-    public Optional<LifecycleAwareComponent> parse(
-            PsiFile file) throws Exception {
-
-        Optional<PsiClass[]> classes =
-                getClasses(file);
+    public Optional<LifecycleAwareComponent> parse(PsiFile file) {
+        Optional<PsiClass[]> classes = getClasses(file);
 
         if (!classes.isPresent() || classes.get().length == 0) {
             return Optional.empty();
         }
 
-        List<LifecycleEventHandler> handlers =
-                new ArrayList<>();
+        List<LifecycleEventHandler> handlers = new ArrayList<>();
 
         PsiClass psiClass = classes.get()[0];
 
@@ -54,22 +50,14 @@ public class ActivityFileParser implements IActivityFileParser {
         return Optional.of(new LifecycleAwareComponent(psiClass, handlers));
     }
 
-    private List<ResourceAcquisition> lookupResourceAcquisitions(
-            PsiMethod method) {
-
-        List<ResourceAcquisition> result =
-                new ArrayList<>();
-
+    private List<ResourceAcquisition> lookupResourceAcquisitions(PsiMethod method) {
+        List<ResourceAcquisition> result = new ArrayList<>();
 
         return result;
     }
 
-    private List<ResourceRelease> lookupResourceReleases(
-            PsiMethod method) {
-
-        List<ResourceRelease> result =
-                new ArrayList<>();
-
+    private List<ResourceRelease> lookupResourceReleases(PsiMethod method) {
+        List<ResourceRelease> result = new ArrayList<>();
 
         return result;
     }

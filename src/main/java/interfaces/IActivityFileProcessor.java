@@ -3,5 +3,5 @@ package interfaces;
 import com.intellij.psi.PsiFile;
 
 public interface IActivityFileProcessor {
-    void process(PsiFile file) throws Exception;
+    void process(PsiFile file);
 }

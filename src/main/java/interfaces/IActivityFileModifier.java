@@ -1,7 +1,8 @@
 package interfaces;
 
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiMethod;
 
 public interface IActivityFileModifier {
-    void addLifecycleEventHandler(PsiClass activityClass, String handlerName);
+    PsiMethod createAndAddLifecycleHandlerMethod(PsiClass activityClass, String handlerName);
 }

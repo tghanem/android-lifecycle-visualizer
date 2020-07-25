@@ -2,16 +2,14 @@ package impl.graphics;
 
 import impl.model.dstl.LifecycleEventHandler;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class LifecycleHandlerNode extends LifecycleNode {
-    public LifecycleHandlerNode(Optional<LifecycleEventHandler> handler, String name) throws IOException {
+    public LifecycleHandlerNode(Optional<LifecycleEventHandler> handler, String name) {
         super(name);
 
         this.handler = handler;
@@ -19,11 +17,20 @@ public class LifecycleHandlerNode extends LifecycleNode {
 
         if (!handler.isPresent()) {
             this.setForeground(Color.GRAY);
-            this.setBackground(Color.LIGHT_GRAY);
         }
 
         this.setVisible(false);
         this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("handler.png")));
+    }
+
+    public void setHandler(LifecycleEventHandler value) {
+        handler = Optional.of(value);
+
+        this.setForeground(Color.BLACK);
+    }
+
+    public Optional<LifecycleEventHandler> getHandler() {
+        return handler;
     }
 
     public List<LifecycleNode> getNextNodes() {
@@ -59,5 +66,5 @@ public class LifecycleHandlerNode extends LifecycleNode {
     }
 
     private final List<LifecycleNode> nextNodes;
-    private final Optional<LifecycleEventHandler> handler;
+    private Optional<LifecycleEventHandler> handler;
 }

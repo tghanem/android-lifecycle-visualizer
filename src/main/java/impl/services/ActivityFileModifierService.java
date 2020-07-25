@@ -6,7 +6,7 @@ import interfaces.IActivityFileModifier;
 
 public class ActivityFileModifierService implements IActivityFileModifier {
     @Override
-    public void addLifecycleEventHandler(PsiClass activityClass, String handlerName) {
+    public PsiMethod createAndAddLifecycleHandlerMethod(PsiClass activityClass, String handlerName) {
         PsiFile activityFile =
                 activityClass.getContainingFile();
 
@@ -17,7 +17,7 @@ public class ActivityFileModifierService implements IActivityFileModifier {
 
         handlerMethod
                 .getModifierList()
-                .addAnnotation(Override.class.getName());
+                .addAnnotation(Override.class.getSimpleName());
 
         handlerMethod
                 .getModifierList()
@@ -28,5 +28,7 @@ public class ActivityFileModifierService implements IActivityFileModifier {
                 () -> {
                     activityClass.add(handlerMethod);
                 });
+
+        return handlerMethod;
     }
 }

@@ -1,6 +1,7 @@
 package impl.graphics;
 
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.psi.PsiMethod;
 import impl.Helper;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
@@ -13,9 +14,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
-import java.io.IOException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class LifecyclePanel extends JPanel {
@@ -25,7 +25,7 @@ public class LifecyclePanel extends JPanel {
     }
 
     public void populate(
-            ActivityMetadataToRender metadata) throws IOException {
+            ActivityMetadataToRender metadata) {
 
         subtreeVisibleHashMap.clear();
 
@@ -185,7 +185,7 @@ public class LifecyclePanel extends JPanel {
 
     private LifecycleHandlerNode buildLifecycleGraph(
             ActivityMetadataToRender metadata,
-            Consumer<LifecycleNode> repaint) throws IOException {
+            Consumer<LifecycleNode> repaint) {
 
         LifecycleHandlerNode onCreate =
                 buildLifecycleHandlerNode(metadata, "onCreate", repaint);
@@ -250,7 +250,7 @@ public class LifecyclePanel extends JPanel {
     private LifecycleHandlerNode buildLifecycleHandlerNode(
             ActivityMetadataToRender metadata,
             String handlerName,
-            Consumer<LifecycleNode> repaint) throws IOException {
+            Consumer<LifecycleNode> repaint) {
 
         Optional<LifecycleEventHandler> handler =
                 findByName(metadata.getHandlers(), handlerName);
@@ -283,17 +283,26 @@ public class LifecyclePanel extends JPanel {
                         if (SwingUtilities.isRightMouseButton(mouseEvent)) {
                             JPopupMenu menu = new JPopupMenu();
 
-                            if (!handler.isPresent()) {
+                            if (!node.getHandler().isPresent()) {
                                 menu.add(
                                         new JMenuItem(
                                                 new AbstractAction("Add Handler") {
                                                     @Override
                                                     public void actionPerformed(ActionEvent actionEvent) {
-                                                        ServiceManager
-                                                                .getService(IActivityFileModifier.class)
-                                                                .addLifecycleEventHandler(
-                                                                        metadata.getActivityClass(),
-                                                                        handlerName);
+                                                        PsiMethod handlerElement =
+                                                                ServiceManager
+                                                                        .getService(IActivityFileModifier.class)
+                                                                        .createAndAddLifecycleHandlerMethod(
+                                                                                metadata.getActivityClass(),
+                                                                                handlerName);
+
+                                                        node.setHandler(
+                                                                new LifecycleEventHandler(
+                                                                        handlerElement,
+                                                                        new ArrayList<>(),
+                                                                        new ArrayList<>()));
+
+                                                        Helper.navigateTo(handlerElement);
                                                     }
                                                 }));
                             } else {
