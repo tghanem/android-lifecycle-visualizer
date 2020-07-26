@@ -9,7 +9,6 @@ import interfaces.ILifecycleEventHandlerAnalyzerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 public class LifecycleEventHandlerAnalyzerFactory implements ILifecycleEventHandlerAnalyzerFactory {
@@ -17,48 +16,18 @@ public class LifecycleEventHandlerAnalyzerFactory implements ILifecycleEventHand
     public ILifecycleEventHandlerAnalyzer<ResourceAcquisition> createResourceAcquisitionAnalyzer() {
         return
                 new CompoundResourceAcquisitionAnalyzer(
-                        Arrays.asList(createFullyQualifiedClassAndMethodNameResourceAcquisitionAnalyzer()));
+                        Arrays.asList(
+                                new FullyQualifiedClassAndMethodNamesBasedResourceAcquisitionAnalyzer(
+                                        FullyQualifiedClassAndMethodName.ResourceAcquisitions)));
     }
 
     @Override
     public ILifecycleEventHandlerAnalyzer<ResourceRelease> createResourceReleaseAnalyzer() {
         return
                 new CompoundResourceReleaseAnalyzer(
-                        Arrays.asList(createFullyQualifiedClassAndMethodNameResourceReleaseAnalyzer()));
-    }
-
-    private ILifecycleEventHandlerAnalyzer<ResourceAcquisition> createFullyQualifiedClassAndMethodNameResourceAcquisitionAnalyzer() {
-        HashSet<FullyQualifiedClassAndMethodName> methodCallsToMatch =
-                new HashSet<>();
-
-        methodCallsToMatch.add(
-                new FullyQualifiedClassAndMethodName(
-                        "android.hardware.Camera",
-                        "open"));
-
-        methodCallsToMatch.add(
-                new FullyQualifiedClassAndMethodName(
-                        "com.google.android.things.userdriver.UserDriverManager",
-                        "registerGnssDriver"));
-
-        return new FullyQualifiedClassAndMethodNamesBasedResourceAcquisitionAnalyzer(methodCallsToMatch);
-    }
-
-    private ILifecycleEventHandlerAnalyzer<ResourceRelease> createFullyQualifiedClassAndMethodNameResourceReleaseAnalyzer() {
-        HashSet<FullyQualifiedClassAndMethodName> methodCallsToMatch =
-                new HashSet<>();
-
-        methodCallsToMatch.add(
-                new FullyQualifiedClassAndMethodName(
-                        "android.hardware.Camera",
-                        "release"));
-
-        methodCallsToMatch.add(
-                new FullyQualifiedClassAndMethodName(
-                        "com.google.android.things.userdriver.UserDriverManager",
-                        "unregisterGnssDriver"));
-
-        return new FullyQualifiedClassAndMethodNamesBasedResourceReleaseAnalyzer(methodCallsToMatch);
+                        Arrays.asList(
+                                new FullyQualifiedClassAndMethodNamesBasedResourceReleaseAnalyzer(
+                                        FullyQualifiedClassAndMethodName.ResourceReleases)));
     }
 
     class CompoundResourceAcquisitionAnalyzer implements ILifecycleEventHandlerAnalyzer<ResourceAcquisition> {

@@ -8,6 +8,7 @@ public abstract class LifecycleNode extends JButton {
         super(name);
 
         this.name = name;
+        this.setToolTipText(name);
         this.setVisible(false);
     }
 
