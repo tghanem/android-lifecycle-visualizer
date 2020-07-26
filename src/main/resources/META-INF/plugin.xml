@@ -51,5 +51,9 @@
         <applicationService
                 serviceInterface="interfaces.ILifecycleNodeFactory"
                 serviceImplementation="impl.services.LifecycleNodeFactory"/>
+
+        <applicationService
+                serviceInterface="interfaces.ILifecycleEventHandlerAnalyzerFactory"
+                serviceImplementation="impl.services.LifecycleEventHandlerAnalyzerFactory"/>
     </extensions>
 </idea-plugin>
