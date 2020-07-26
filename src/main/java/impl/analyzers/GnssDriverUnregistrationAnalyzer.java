@@ -8,15 +8,17 @@ import interfaces.ILifecycleEventHandlerAnalyzer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeprecatedCameraApiReleaseAnalyzer implements ILifecycleEventHandlerAnalyzer<ResourceRelease> {
+public class GnssDriverUnregistrationAnalyzer implements ILifecycleEventHandlerAnalyzer<ResourceRelease> {
     @Override
     public List<ResourceRelease> analyze(PsiMethod method) {
         List<ResourceRelease> result = new ArrayList<>();
 
         Helper.processMethodCallExpressions(
                 method,
-                (psiElement, qualifierFullName, methodName) -> {
-                    if (qualifierFullName.equals("android.hardware.Camera") && methodName.equals("release")) {
+                (psiElement, qualifierFullyQualifiedName, methodName) -> {
+                    if (qualifierFullyQualifiedName.equals("com.google.android.things.userdriver.UserDriverManager") &&
+                            methodName.equals("unregisterGnssDriver")) {
+
                         result.add(new ResourceRelease(psiElement));
                     }
                 });

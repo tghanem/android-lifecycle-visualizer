@@ -1,7 +1,10 @@
 package impl.services;
 
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import impl.Helper;
 import interfaces.IActivityFileProcessor;
 import interfaces.IFileProcessor;
@@ -16,7 +19,7 @@ public class FileProcessorService implements IFileProcessor {
     @Override
     public void setCurrentlyOpenedFile(PsiFile file) throws Exception {
         Optional<PsiFile> androidManifestFile =
-                Helper.findAndroidManifestFile(file.getProject());
+                findAndroidManifestFile(file.getProject());
 
         if (!androidManifestFile.isPresent()) {
             return;
@@ -45,6 +48,20 @@ public class FileProcessorService implements IFileProcessor {
                     .getService(IActivityFileProcessor.class)
                     .process(file);
         }
+    }
+
+    private Optional<PsiFile> findAndroidManifestFile(Project project) {
+        PsiFile[] files =
+                FilenameIndex.getFilesByName(
+                        project,
+                        "AndroidManifest.xml",
+                        GlobalSearchScope.projectScope(project));
+
+        if (files.length > 0) {
+            return Optional.of(files[0]);
+        }
+
+        return Optional.empty();
     }
 
     private Boolean isActivityNameEqualTo(Element activityElement, String fileName) {

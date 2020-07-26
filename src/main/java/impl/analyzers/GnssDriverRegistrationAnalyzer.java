@@ -8,7 +8,7 @@ import interfaces.ILifecycleEventHandlerAnalyzer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeprecatedCameraApiAcquisitionAnalyzer implements ILifecycleEventHandlerAnalyzer<ResourceAcquisition> {
+public class GnssDriverRegistrationAnalyzer implements ILifecycleEventHandlerAnalyzer<ResourceAcquisition> {
     @Override
     public List<ResourceAcquisition> analyze(PsiMethod method) {
         List<ResourceAcquisition> result = new ArrayList<>();
@@ -16,7 +16,9 @@ public class DeprecatedCameraApiAcquisitionAnalyzer implements ILifecycleEventHa
         Helper.processMethodCallExpressions(
                 method,
                 (psiElement, qualifierFullyQualifiedName, methodName) -> {
-                    if (qualifierFullyQualifiedName.equals("android.hardware.Camera") && methodName.equals("open")) {
+                    if (qualifierFullyQualifiedName.equals("com.google.android.things.userdriver.UserDriverManager") &&
+                            methodName.equals("registerGnssDriver")) {
+
                         result.add(new ResourceAcquisition(psiElement));
                     }
                 });

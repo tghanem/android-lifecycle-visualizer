@@ -1,4 +1,6 @@
-package impl.graphics;
+package interfaces.consumers;
+
+import impl.graphics.LifecycleNode;
 
 @FunctionalInterface
 public interface LifecycleNodeConsumer {

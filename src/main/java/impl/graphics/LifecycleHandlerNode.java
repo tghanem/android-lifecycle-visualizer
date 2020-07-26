@@ -1,6 +1,7 @@
 package impl.graphics;
 
 import impl.model.dstl.LifecycleEventHandler;
+import interfaces.consumers.LifecycleNodeConsumer;
 
 import javax.swing.*;
 import java.awt.*;

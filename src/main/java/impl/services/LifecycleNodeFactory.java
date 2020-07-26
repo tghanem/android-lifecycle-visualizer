@@ -1,9 +1,10 @@
 package impl.services;
 
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import impl.Helper;
 import impl.graphics.CircularLifecycleNode;
 import impl.graphics.LifecycleHandlerNode;
 import impl.graphics.ResourceAcquisitionLifecycleNode;
@@ -17,6 +18,8 @@ import interfaces.ILifecycleNodeFactory;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -41,7 +44,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                     }
                 });
 
-        Helper.attachToMouseRightClick(
+        attachToMouseRightClick(
                 createLifecycleHandlerNodeMenu(
                         ownerActivityClass,
                         node),
@@ -58,7 +61,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
         CircularLifecycleNode node =
                 new CircularLifecycleNode(targetLifecycleHandlerNode);
 
-        Helper.attachToMouseRightClick(
+        attachToMouseRightClick(
                 createLifecycleHandlerNodeMenu(ownerActivityClass, targetLifecycleHandlerNode),
                 node);
 
@@ -78,10 +81,10 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
 
         menuItems.put(
                 "Go To Line",
-                () -> Helper.navigateTo(resourceAcquisition.getPsiElement()));
+                () -> navigateTo(resourceAcquisition.getPsiElement()));
 
-        Helper.attachToMouseRightClick(
-                Helper.createPopupMenu(menuItems),
+        attachToMouseRightClick(
+                createPopupMenu(menuItems),
                 resourceAcquisitionNode);
 
         return resourceAcquisitionNode;
@@ -100,10 +103,10 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
 
         menuItems.put(
                 "Go To Line",
-                () -> Helper.navigateTo(resourceRelease.getPsiElement()));
+                () -> navigateTo(resourceRelease.getPsiElement()));
 
-        Helper.attachToMouseRightClick(
-                Helper.createPopupMenu(menuItems),
+        attachToMouseRightClick(
+                createPopupMenu(menuItems),
                 resourceReleaseNode);
 
         return resourceReleaseNode;
@@ -120,7 +123,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
             menuItems.put(
                     "Go To Handler",
                     () -> {
-                        Helper.navigateTo(node.getHandler().get().getPsiElement());
+                        navigateTo(node.getHandler().get().getPsiElement());
                     });
         } else {
             menuItems.put(
@@ -139,10 +142,53 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                                         new ArrayList<>(),
                                         new ArrayList<>()));
 
-                        Helper.navigateTo(handlerElement);
+                        navigateTo(handlerElement);
                     });
         }
 
-        return Helper.createPopupMenu(menuItems);
+        return createPopupMenu(menuItems);
+    }
+
+    private void attachToMouseRightClick(JPopupMenu menu, JComponent component) {
+        component.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent mouseEvent) {
+                        if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                            menu.show(
+                                    mouseEvent.getComponent(),
+                                    mouseEvent.getX(),
+                                    mouseEvent.getY());
+                        }
+                    }
+                });
+    }
+
+    private JPopupMenu createPopupMenu(HashMap<String, Runnable> menuItems) {
+        JPopupMenu menu = new JPopupMenu();
+
+        menuItems.forEach((itemName, onClickAction) -> {
+            JMenuItem item = new JMenuItem(itemName);
+            item.addActionListener(actionEvent -> onClickAction.run());
+            menu.add(item);
+        });
+
+        return menu;
+    }
+
+    private void navigateTo(PsiElement element) {
+        PsiElement navigationElement = element.getNavigationElement();
+
+        if (navigationElement == null) {
+            return;
+        }
+
+        if (navigationElement instanceof Navigatable) {
+            Navigatable asNavigatable = (Navigatable) navigationElement;
+
+            if (asNavigatable.canNavigate()) {
+                asNavigatable.navigate(true);
+            }
+        }
     }
 }
