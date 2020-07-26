@@ -11,5 +11,9 @@ public class ResourceReleaseLifecycleNode extends LifecycleNode {
         this.resourceRelease = resourceRelease;
     }
 
+    public ResourceRelease getResourceRelease() {
+        return resourceRelease;
+    }
+
     private final ResourceRelease resourceRelease;
 }

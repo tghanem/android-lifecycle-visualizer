@@ -11,5 +11,9 @@ public class ResourceAcquisitionLifecycleNode extends LifecycleNode {
         this.resourceAcquisition = resourceAcquisition;
     }
 
+    public ResourceAcquisition getResourceAcquisition() {
+        return resourceAcquisition;
+    }
+
     private final ResourceAcquisition resourceAcquisition;
 }

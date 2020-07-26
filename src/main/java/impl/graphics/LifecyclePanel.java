@@ -1,19 +1,13 @@
 package impl.graphics;
 
 import com.intellij.openapi.components.ServiceManager;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiMethod;
-import impl.Helper;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
-import interfaces.IActivityFileModifier;
+import interfaces.ILifecycleNodeFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
 import java.util.List;
 import java.util.*;
@@ -188,44 +182,94 @@ public class LifecyclePanel extends JPanel {
             ActivityMetadataToRender metadata,
             Consumer<LifecycleNode> repaint) {
 
+        ILifecycleNodeFactory lifecycleNodeFactory =
+                ServiceManager.getService(ILifecycleNodeFactory.class);
+
         LifecycleHandlerNode onCreate =
-                buildLifecycleHandlerNode(metadata, "onCreate", repaint);
+                buildLifecycleHandlerNode(
+                        lifecycleNodeFactory,
+                        metadata,
+                        "onCreate",
+                        repaint);
 
         onCreate.setVisible(true);
 
         LifecycleHandlerNode onStart =
-                buildLifecycleHandlerNode(metadata, "onStart", repaint);
+                buildLifecycleHandlerNode(
+                        lifecycleNodeFactory,
+                        metadata,
+                        "onStart",
+                        repaint);
 
         onCreate.addNextNode(0, onStart);
 
         LifecycleHandlerNode onResume =
-                buildLifecycleHandlerNode(metadata, "onResume", repaint);
+                buildLifecycleHandlerNode(
+                        lifecycleNodeFactory,
+                        metadata,
+                        "onResume",
+                        repaint);
 
         onStart.addNextNode(0, onResume);
 
         LifecycleHandlerNode onPause =
-                buildLifecycleHandlerNode(metadata, "onPause", repaint);
+                buildLifecycleHandlerNode(
+                        lifecycleNodeFactory,
+                        metadata,
+                        "onPause",
+                        repaint);
 
         onResume.addNextNode(0, onPause);
 
         LifecycleHandlerNode onStop =
-                buildLifecycleHandlerNode(metadata, "onStop", repaint);
+                buildLifecycleHandlerNode(
+                        lifecycleNodeFactory,
+                        metadata,
+                        "onStop",
+                        repaint);
 
-        onPause.addNextNode(0, buildCircularLifecycleNode(metadata, onResume));
-        onPause.addNextNode(0, buildCircularLifecycleNode(metadata, onCreate));
+        onPause.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                        metadata.getActivityClass(),
+                        onResume));
+
+        onPause.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                        metadata.getActivityClass(),
+                        onCreate));
+
         onPause.addNextNode(0, onStop);
 
         LifecycleHandlerNode onRestart =
-                buildLifecycleHandlerNode(metadata, "onRestart", repaint);
+                buildLifecycleHandlerNode(
+                        lifecycleNodeFactory,
+                        metadata,
+                        "onRestart",
+                        repaint);
 
-        onRestart.addNextNode(0, buildCircularLifecycleNode(metadata, onStart));
+        onRestart.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                        metadata.getActivityClass(),
+                        onStart));
 
         LifecycleHandlerNode onDestroy =
-                buildLifecycleHandlerNode(metadata, "onDestroy", repaint);
+                buildLifecycleHandlerNode(
+                        lifecycleNodeFactory,
+                        metadata,
+                        "onDestroy",
+                        repaint);
 
         onStop.addNextNode(0, onRestart);
         onStop.addNextNode(0, onDestroy);
-        onStop.addNextNode(0, buildCircularLifecycleNode(metadata, onCreate));
+
+        onStop.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                        metadata.getActivityClass(),
+                        onCreate));
 
         subtreeVisibleHashMap.put(onCreate, false);
         subtreeVisibleHashMap.put(onStart, false);
@@ -250,35 +294,8 @@ public class LifecyclePanel extends JPanel {
         return Optional.empty();
     }
 
-    private CircularLifecycleNode buildCircularLifecycleNode(
-            ActivityMetadataToRender metadata,
-            LifecycleHandlerNode target) {
-
-        CircularLifecycleNode node =
-                new CircularLifecycleNode(target);
-
-        node.addMouseListener(
-                new MouseAdapter() {
-                    @Override
-                    public void mousePressed(MouseEvent mouseEvent) {
-                        if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                            JPopupMenu menu =
-                                    createLifecycleHandlerNodeMenu(
-                                         metadata.getActivityClass(),
-                                         target);
-
-                            menu.show(
-                                    mouseEvent.getComponent(),
-                                    mouseEvent.getX(),
-                                    mouseEvent.getY());
-                        }
-                    }
-                });
-
-        return node;
-    }
-
     private LifecycleHandlerNode buildLifecycleHandlerNode(
+            ILifecycleNodeFactory lifecycleNodeFactory,
             ActivityMetadataToRender metadata,
             String handlerName,
             Consumer<LifecycleNode> repaint) {
@@ -287,87 +304,25 @@ public class LifecyclePanel extends JPanel {
                 findByName(metadata.getHandlers(), handlerName);
 
         LifecycleHandlerNode node =
-                new LifecycleHandlerNode(handler, handlerName);
+                lifecycleNodeFactory.createLifecycleHandlerNode(
+                        metadata.getActivityClass(),
+                        handlerName,
+                        handler,
+                        lifecycleHandlerNode -> repaint.accept(lifecycleHandlerNode));
 
         if (handler.isPresent()) {
             for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
                 node.addNextNode(
-                        new ResourceAcquisitionLifecycleNode(
-                                resourceAcquisition.getPsiElement().getText(),
-                                resourceAcquisition));
+                        lifecycleNodeFactory.createResourceAcquisitionLifecycleNode(resourceAcquisition));
             }
 
             for (ResourceRelease resourceRelease : handler.get().getResourceReleases()) {
                 node.addNextNode(
-                        new ResourceReleaseLifecycleNode(
-                                resourceRelease.getPsiElement().getText(),
-                                resourceRelease));
+                        lifecycleNodeFactory.createResourceReleaseLifecycleNode(resourceRelease));
             }
         }
 
-        node.addActionListener(n -> repaint.accept(node));
-
-        node.addMouseListener(
-                new MouseAdapter() {
-                    @Override
-                    public void mousePressed(MouseEvent mouseEvent) {
-                        if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                            JPopupMenu menu =
-                                    createLifecycleHandlerNodeMenu(
-                                            metadata.getActivityClass(),
-                                            node);
-
-                            menu.show(
-                                    mouseEvent.getComponent(),
-                                    mouseEvent.getX(),
-                                    mouseEvent.getY());
-                        }
-                    }
-                });
-
         return node;
-    }
-
-    private JPopupMenu createLifecycleHandlerNodeMenu(
-            PsiClass activityClass,
-            LifecycleHandlerNode node) {
-
-        JPopupMenu menu = new JPopupMenu();
-
-        if (!node.getHandler().isPresent()) {
-            menu.add(
-                    new JMenuItem(
-                            new AbstractAction("Add Handler") {
-                                @Override
-                                public void actionPerformed(ActionEvent actionEvent) {
-                                    PsiMethod handlerElement =
-                                            ServiceManager
-                                                    .getService(IActivityFileModifier.class)
-                                                    .createAndAddLifecycleHandlerMethod(
-                                                            activityClass,
-                                                            node.getName());
-
-                                    node.setHandler(
-                                            new LifecycleEventHandler(
-                                                    handlerElement,
-                                                    new ArrayList<>(),
-                                                    new ArrayList<>()));
-
-                                    Helper.navigateTo(handlerElement);
-                                }
-                            }));
-        } else {
-            menu.add(
-                    new JMenuItem(
-                            new AbstractAction("Go To Handler") {
-                                @Override
-                                public void actionPerformed(ActionEvent actionEvent) {
-                                    Helper.navigateTo(node.getHandler().get().getPsiElement());
-                                }
-                            }));
-        }
-
-        return menu;
     }
 
     private Optional<LifecycleHandlerNode> graphRoot;

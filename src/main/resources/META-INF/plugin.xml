@@ -47,5 +47,9 @@
         <applicationService
                 serviceInterface="interfaces.IActivityFileModifier"
                 serviceImplementation="impl.services.ActivityFileModifierService"/>
+
+        <applicationService
+                serviceInterface="interfaces.ILifecycleNodeFactory"
+                serviceImplementation="impl.services.LifecycleNodeFactory"/>
     </extensions>
 </idea-plugin>

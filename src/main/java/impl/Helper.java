@@ -10,24 +10,54 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.swing.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class Helper {
+    public static void attachToMouseRightClick(JPopupMenu menu, JComponent component) {
+        component.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent mouseEvent) {
+                        if (SwingUtilities.isRightMouseButton(mouseEvent)) {
+                            menu.show(
+                                    mouseEvent.getComponent(),
+                                    mouseEvent.getX(),
+                                    mouseEvent.getY());
+                        }
+                    }
+                });
+    }
+
+    public static JPopupMenu createPopupMenu(HashMap<String, Runnable> menuItems) {
+        JPopupMenu menu = new JPopupMenu();
+
+        menuItems.forEach((itemName, onClickAction) -> {
+            JMenuItem item = new JMenuItem(itemName);
+            item.addActionListener(actionEvent -> onClickAction.run());
+            menu.add(item);
+        });
+
+        return menu;
+    }
+
     public static void navigateTo(PsiElement element) {
-        PsiElement navigationElement =
-                element.getNavigationElement();
+        PsiElement navigationElement = element.getNavigationElement();
 
         if (navigationElement == null) {
             return;
         }
 
         if (navigationElement instanceof Navigatable) {
-            Navigatable asNavigatable = (Navigatable)navigationElement;
+            Navigatable asNavigatable = (Navigatable) navigationElement;
 
             if (asNavigatable.canNavigate()) {
                 asNavigatable.navigate(true);
@@ -69,7 +99,7 @@ public class Helper {
             Node node = nodeList.item(i);
 
             if (node instanceof Element) {
-                if (!processElement.apply((Element)node)) {
+                if (!processElement.apply((Element) node)) {
                     break;
                 }
             }
