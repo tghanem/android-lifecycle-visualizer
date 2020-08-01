@@ -55,5 +55,9 @@
         <applicationService
                 serviceInterface="interfaces.ILifecycleEventHandlerAnalyzerFactory"
                 serviceImplementation="impl.services.LifecycleEventHandlerAnalyzerFactory"/>
+
+        <applicationService
+                serviceInterface="interfaces.IActivityFileProcessingController"
+                serviceImplementation="impl.services.ActivityFileProcessingController"/>
     </extensions>
 </idea-plugin>

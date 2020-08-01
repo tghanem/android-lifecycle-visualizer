@@ -5,10 +5,7 @@ import com.intellij.psi.PsiFile;
 import impl.ActivityFileParser;
 import impl.graphics.ActivityMetadataToRender;
 import impl.model.dstl.LifecycleAwareComponent;
-import interfaces.IActivityFileParser;
-import interfaces.IActivityFileProcessor;
-import interfaces.IActivityViewProvider;
-import interfaces.IActivityViewService;
+import interfaces.*;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -22,7 +19,17 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
 
     @Override
     public void process(PsiFile file) {
-        Optional<LifecycleAwareComponent> activityFileDocument = lifecycleParser.parse(file);
+        Boolean shouldProcessActivityFile =
+                ServiceManager
+                    .getService(IActivityFileProcessingController.class)
+                    .shouldProcessActivityFile(file);
+
+        if (!shouldProcessActivityFile) {
+            return;
+        }
+
+        Optional<LifecycleAwareComponent> activityFileDocument =
+                lifecycleParser.parse(file);
 
         if (!activityFileDocument.isPresent()) {
             return;
@@ -42,5 +49,9 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
                             component.getPsiElement(),
                             component.getLifecycleEventHandlers()));
         }
+
+        ServiceManager
+                .getService(IActivityFileProcessingController.class)
+                .setProcessedActivityFile(file);
     }
 }
