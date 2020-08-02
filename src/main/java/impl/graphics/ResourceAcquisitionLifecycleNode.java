@@ -12,7 +12,7 @@ public class ResourceAcquisitionLifecycleNode extends LifecycleNode {
         super(name);
 
         this.resourceAcquisition = resourceAcquisition;
-        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("socket.png")));
+        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("acquire.png")));
     }
 
     public ResourceAcquisition getResourceAcquisition() {

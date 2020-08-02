@@ -9,7 +9,8 @@
     <depends>com.intellij.modules.platform</depends>
 
     <description>
-        A plugin that allows visualizing Android Activities and the implemented lifecycle callback methods.
+        A plugin that allows visualizing the implemented lifecycle callback methods in an Android Activity and the
+        resources acquired and released in each callback method.
     </description>
 
     <change-notes>
@@ -25,7 +26,8 @@
         <toolWindow
                 anchor="bottom"
                 factoryClass="windows.WindowFactory"
-                id="Activities Navigator"
+                icon="/tool_window_icon.png"
+                id="Activity Navigator"
                 secondary="true"/>
 
         <applicationService

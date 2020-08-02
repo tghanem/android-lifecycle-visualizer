@@ -12,7 +12,7 @@ public class ResourceReleaseLifecycleNode extends LifecycleNode {
         super(name);
 
         this.resourceRelease = resourceRelease;
-        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("socket.png")));
+        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("release.png")));
     }
 
     public ResourceRelease getResourceRelease() {
