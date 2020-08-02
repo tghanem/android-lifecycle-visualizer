@@ -9,9 +9,7 @@ import impl.graphics.CircularLifecycleNode;
 import impl.graphics.LifecycleHandlerNode;
 import impl.graphics.ResourceAcquisitionLifecycleNode;
 import impl.graphics.ResourceReleaseLifecycleNode;
-import impl.model.dstl.LifecycleEventHandler;
-import impl.model.dstl.ResourceAcquisition;
-import impl.model.dstl.ResourceRelease;
+import impl.model.dstl.*;
 import interfaces.IActivityFileModifier;
 import interfaces.ILifecycleNodeFactory;
 
@@ -74,7 +72,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
 
         ResourceAcquisitionLifecycleNode resourceAcquisitionNode =
                 new ResourceAcquisitionLifecycleNode(
-                        resourceAcquisition.getPsiElement().getText(),
+                        getContent(resourceAcquisition),
                         resourceAcquisition);
 
         HashMap<String, Runnable> menuItems = new HashMap<>();
@@ -96,7 +94,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
 
         ResourceReleaseLifecycleNode resourceReleaseNode =
                 new ResourceReleaseLifecycleNode(
-                        resourceRelease.getPsiElement().getText(),
+                        getContent(resourceRelease),
                         resourceRelease);
 
         HashMap<String, Runnable> menuItems = new HashMap<>();
@@ -110,6 +108,26 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                 resourceReleaseNode);
 
         return resourceReleaseNode;
+    }
+
+    private String getContent(ResourceAcquisition acquisition) {
+        if (acquisition instanceof CameraAcquired) {
+            return "Camera";
+        } else if (acquisition instanceof BluetoothAcquired) {
+            return "Bluetooth";
+        } else {
+            return acquisition.getPsiElement().getText();
+        }
+    }
+
+    private String getContent(ResourceRelease release) {
+        if (release instanceof CameraReleased) {
+            return "Camera";
+        } else if (release instanceof BluetoothReleased) {
+            return "Bluetooth";
+        } else {
+            return release.getPsiElement().getText();
+        }
     }
 
     private JPopupMenu createLifecycleHandlerNodeMenu(

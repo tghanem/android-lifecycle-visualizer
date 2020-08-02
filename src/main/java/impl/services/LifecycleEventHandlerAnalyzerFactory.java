@@ -1,33 +1,44 @@
 package impl.services;
 
 import com.intellij.psi.PsiMethod;
-import impl.analyzers.*;
-import impl.model.dstl.ResourceAcquisition;
-import impl.model.dstl.ResourceRelease;
+import com.intellij.psi.PsiMethodCallExpression;
+import impl.analyzers.FullQualifiedClassAndMethodNamesAnalyzer;
+import impl.analyzers.FullyQualifiedClassAndMethodName;
+import impl.model.dstl.*;
 import interfaces.ILifecycleEventHandlerAnalyzer;
 import interfaces.ILifecycleEventHandlerAnalyzerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.Function;
 
 public class LifecycleEventHandlerAnalyzerFactory implements ILifecycleEventHandlerAnalyzerFactory {
     @Override
     public ILifecycleEventHandlerAnalyzer<ResourceAcquisition> createResourceAcquisitionAnalyzer() {
+        HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, ResourceAcquisition>> map =
+                new HashMap<>();
+
+        map.put(FullyQualifiedClassAndMethodName.CameraOpen, e -> new CameraAcquired(e));
+        map.put(FullyQualifiedClassAndMethodName.GnssRegister, e -> new BluetoothAcquired(e));
+
         return
                 new CompoundResourceAcquisitionAnalyzer(
-                        Arrays.asList(
-                                new FullyQualifiedClassAndMethodNamesBasedResourceAcquisitionAnalyzer(
-                                        FullyQualifiedClassAndMethodName.ResourceAcquisitions)));
+                        Arrays.asList(new FullQualifiedClassAndMethodNamesAnalyzer<>(map)));
     }
 
     @Override
     public ILifecycleEventHandlerAnalyzer<ResourceRelease> createResourceReleaseAnalyzer() {
+        HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, ResourceRelease>> map =
+                new HashMap<>();
+
+        map.put(FullyQualifiedClassAndMethodName.CameraRelease, e -> new CameraReleased(e));
+        map.put(FullyQualifiedClassAndMethodName.GnssUnregister, e -> new BluetoothReleased(e));
+
         return
                 new CompoundResourceReleaseAnalyzer(
-                        Arrays.asList(
-                                new FullyQualifiedClassAndMethodNamesBasedResourceReleaseAnalyzer(
-                                        FullyQualifiedClassAndMethodName.ResourceReleases)));
+                        Arrays.asList(new FullQualifiedClassAndMethodNamesAnalyzer<>(map)));
     }
 
     class CompoundResourceAcquisitionAnalyzer implements ILifecycleEventHandlerAnalyzer<ResourceAcquisition> {

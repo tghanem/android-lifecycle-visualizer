@@ -1,7 +1,5 @@
 package impl.analyzers;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 
 public class FullyQualifiedClassAndMethodName {
@@ -25,13 +23,10 @@ public class FullyQualifiedClassAndMethodName {
                     "com.google.android.things.userdriver.UserDriverManager",
                     "unregisterGnssDriver");
 
-    public static final HashSet<FullyQualifiedClassAndMethodName> ResourceAcquisitions =
-            new HashSet<>(Arrays.asList(CameraOpen, GnssRegister));
+    public FullyQualifiedClassAndMethodName(
+            String fullyQualifiedClassName,
+            String methodName) {
 
-    public static final HashSet<FullyQualifiedClassAndMethodName> ResourceReleases =
-            new HashSet<>(Arrays.asList(CameraRelease, GnssUnregister));
-
-    public FullyQualifiedClassAndMethodName(String fullyQualifiedClassName, String methodName) {
         this.fullyQualifiedClassName = fullyQualifiedClassName;
         this.methodName = methodName;
     }

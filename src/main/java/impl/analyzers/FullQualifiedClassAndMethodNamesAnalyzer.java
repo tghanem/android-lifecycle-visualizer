@@ -8,11 +8,14 @@ import interfaces.ILifecycleEventHandlerAnalyzer;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.Function;
 
-public abstract class FullQualifiedClassAndMethodNamesAnalyzerBase<T> implements ILifecycleEventHandlerAnalyzer<T> {
-    protected FullQualifiedClassAndMethodNamesAnalyzerBase(HashSet<FullyQualifiedClassAndMethodName> methodCallsToMatch) {
+public class FullQualifiedClassAndMethodNamesAnalyzer<T> implements ILifecycleEventHandlerAnalyzer<T> {
+    public FullQualifiedClassAndMethodNamesAnalyzer(
+            HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, T>> methodCallsToMatch) {
+
         this.methodCallsToMatch = methodCallsToMatch;
     }
 
@@ -39,15 +42,13 @@ public abstract class FullQualifiedClassAndMethodNamesAnalyzerBase<T> implements
                             resolvedMethod.getContainingClass().getQualifiedName(),
                             resolvedMethod.getName());
 
-            if (methodCallsToMatch.contains(classAndMethodName)) {
-                result.add(createMethodCallExpressionHolder(element));
+            if (methodCallsToMatch.containsKey(classAndMethodName)) {
+                result.add(methodCallsToMatch.get(classAndMethodName).apply(methodCallExpression));
             }
         }
 
         return result;
     }
 
-    protected abstract T createMethodCallExpressionHolder(PsiElement methodCallExpression);
-
-    private final HashSet<FullyQualifiedClassAndMethodName> methodCallsToMatch;
+    private final HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, T>> methodCallsToMatch;
 }
