@@ -3,13 +3,12 @@ package impl.services;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.psi.PsiFile;
 import impl.ActivityFileParser;
-import interfaces.graphics.dsvl.IActivityViewService;
-import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
 import impl.model.dstl.LifecycleAwareComponent;
-import interfaces.*;
-import interfaces.graphics.dsvl.IActivityViewProvider;
+import interfaces.IActivityFileParser;
+import interfaces.IActivityFileProcessingController;
+import interfaces.IActivityFileProcessor;
+import interfaces.graphics.dsvl.IActivityViewService;
 
-import java.util.Collection;
 import java.util.Optional;
 
 public class ActivityFileProcessorService implements IActivityFileProcessor {
@@ -37,20 +36,9 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
             return;
         }
 
-        Collection<IActivityViewProvider> viewProviders =
-                ServiceManager
-                        .getService(IActivityViewService.class)
-                        .getViewProviders();
-
-        for (IActivityViewProvider provider : viewProviders) {
-            LifecycleAwareComponent component =
-                    activityFileDocument.get();
-
-            provider.display(
-                    new ActivityMetadataToRender(
-                            component.getPsiElement(),
-                            component.getLifecycleEventHandlers()));
-        }
+        ServiceManager
+                .getService(IActivityViewService.class)
+                .displayActivityView(activityFileDocument.get());
 
         ServiceManager
                 .getService(IActivityFileProcessingController.class)

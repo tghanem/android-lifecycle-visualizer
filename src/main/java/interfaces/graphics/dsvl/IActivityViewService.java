@@ -1,9 +1,9 @@
 package interfaces.graphics.dsvl;
 
-import java.util.Collection;
+import com.intellij.openapi.wm.ToolWindow;
+import impl.model.dstl.LifecycleAwareComponent;
 
 public interface IActivityViewService {
-    void registerViewProvider(IActivityViewProvider provider);
-
-    Collection<IActivityViewProvider> getViewProviders();
+    void setActivityViewHolder(ToolWindow toolWindow);
+    void displayActivityView(LifecycleAwareComponent asComponent);
 }

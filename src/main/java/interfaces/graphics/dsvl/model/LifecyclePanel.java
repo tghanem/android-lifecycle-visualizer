@@ -4,6 +4,7 @@ import com.intellij.openapi.components.ServiceManager;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
+import interfaces.graphics.dsvl.IActivityViewProvider;
 import interfaces.graphics.dsvl.ILifecycleNodeFactory;
 
 import javax.swing.*;
@@ -13,15 +14,14 @@ import java.util.List;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class LifecyclePanel extends JPanel {
+public class LifecyclePanel extends JPanel implements IActivityViewProvider {
     public LifecyclePanel() {
         graphRoot = Optional.empty();
         subtreeVisibleHashMap = new HashMap<>();
     }
 
-    public void populate(
-            ActivityMetadataToRender metadata) {
-
+    @Override
+    public void display(ActivityMetadataToRender metadata) {
         subtreeVisibleHashMap.clear();
 
         LifecycleHandlerNode root =
