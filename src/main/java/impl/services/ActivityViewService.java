@@ -1,35 +1,58 @@
 package impl.services;
 
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.FileEditorProvider;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.content.ContentManagerEvent;
+import com.intellij.ui.content.ContentManagerListener;
 import impl.model.dstl.Activity;
 import interfaces.graphics.dsvl.IActivityViewService;
 import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
 import interfaces.graphics.dsvl.model.LifecyclePanel;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ActivityViewService implements IActivityViewService {
     private Optional<ToolWindow> activityViewHolder;
-    private HashMap<String, DisplayedActivity> activities;
+    private List<ActivityViewContents> activities;
 
     public ActivityViewService() {
         activityViewHolder = Optional.empty();
-        activities = new HashMap<>();
+        activities = new ArrayList<>();
     }
 
     @Override
-    public void setActivityViewHolder(ToolWindow toolWindow) {
-        for (String activityQualifiedName : activities.keySet()) {
-            DisplayedActivity displayedActivity =
-                    activities.get(activityQualifiedName);
-
+    public void setActivityViewHolder(Project project, ToolWindow toolWindow) {
+        for (ActivityViewContents activity : activities) {
             toolWindow
                     .getContentManager()
-                    .addContent(displayedActivity.content);
+                    .addContent(activity.content);
         }
+
+        toolWindow.addContentManagerListener(
+                new ContentManagerListener() {
+                    @Override
+                    public void selectionChanged(@NotNull ContentManagerEvent event) {
+                        if (event.getOperation() == ContentManagerEvent.ContentOperation.add) {
+                            FileEditorManager
+                                    .getInstance(project)
+                                    .setSelectedEditor(
+                                            activities
+                                                    .get(event.getIndex())
+                                                    .activity
+                                                    .getPsiElement()
+                                                    .getContainingFile()
+                                                    .getVirtualFile(),
+                                            FileEditorProvider.EP_FILE_EDITOR_PROVIDER.getName());
+                        }
+                    }
+                });
 
         activityViewHolder = Optional.of(toolWindow);
     }
@@ -41,12 +64,15 @@ public class ActivityViewService implements IActivityViewService {
                         .getPsiElement()
                         .getQualifiedName();
 
-        if (activities.containsKey(activityFullyQualifiedName)) {
+        Optional<ActivityViewContents> viewContents =
+                getActivityViewContents(activityFullyQualifiedName);
+
+        if (viewContents.isPresent()) {
             if (activityViewHolder.isPresent()) {
                 activityViewHolder
                         .get()
                         .getContentManager()
-                        .setSelectedContent(activities.get(activityFullyQualifiedName).content);
+                        .setSelectedContent(viewContents.get().content);
             }
         } else {
             LifecyclePanel panel = new LifecyclePanel();
@@ -58,29 +84,43 @@ public class ActivityViewService implements IActivityViewService {
 
             Content activityContent =
                     ContentFactory
-                        .SERVICE
-                        .getInstance()
-                        .createContent(panel, activity.getPsiElement().getName(), false);
+                            .SERVICE
+                            .getInstance()
+                            .createContent(panel, activity.getPsiElement().getName(), false);
 
-            activities.put(
-                    activityFullyQualifiedName,
-                    new DisplayedActivity(activity, panel, activityContent));
+            activities.add(new ActivityViewContents(activity, panel, activityContent));
 
             if (activityViewHolder.isPresent()) {
                 activityViewHolder
                         .get()
                         .getContentManager()
                         .addContent(activityContent);
+
+                activityViewHolder
+                        .get()
+                        .getContentManager()
+                        .setSelectedContent(activityContent, true);
             }
         }
     }
 
-    class DisplayedActivity {
-        DisplayedActivity(
-                Activity activity,
-                LifecyclePanel panel,
-                Content content) {
+    private Optional<ActivityViewContents> getActivityViewContents(String activityFullyQualifiedName) {
+        for (ActivityViewContents contents : activities) {
+            String thatActivityFullyQualifiedName =
+                    contents
+                            .activity
+                            .getPsiElement()
+                            .getQualifiedName();
 
+            if (thatActivityFullyQualifiedName.equals(activityFullyQualifiedName)) {
+                return Optional.of(contents);
+            }
+        }
+        return Optional.empty();
+    }
+
+    class ActivityViewContents {
+        ActivityViewContents(Activity activity, LifecyclePanel panel, Content content) {
             this.activity = activity;
             this.panel = panel;
             this.content = content;

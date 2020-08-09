@@ -12,6 +12,6 @@ public class ActivityLifecycleToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         ServiceManager
                 .getService(IActivityViewService.class)
-                .setActivityViewHolder(toolWindow);
+                .setActivityViewHolder(project, toolWindow);
     }
 }
