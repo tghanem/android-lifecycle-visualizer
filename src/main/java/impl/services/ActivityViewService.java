@@ -1,7 +1,7 @@
 package impl.services;
 
-import interfaces.IActivityViewProvider;
-import interfaces.IActivityViewService;
+import interfaces.graphics.dsvl.IActivityViewProvider;
+import interfaces.graphics.dsvl.IActivityViewService;
 
 import java.util.ArrayList;
 import java.util.Collection;

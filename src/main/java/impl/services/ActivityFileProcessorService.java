@@ -3,9 +3,11 @@ package impl.services;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.psi.PsiFile;
 import impl.ActivityFileParser;
-import impl.graphics.ActivityMetadataToRender;
+import interfaces.graphics.dsvl.IActivityViewService;
+import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
 import impl.model.dstl.LifecycleAwareComponent;
 import interfaces.*;
+import interfaces.graphics.dsvl.IActivityViewProvider;
 
 import java.util.Collection;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package interfaces;
+package interfaces.graphics.dsvl;
 
 import java.util.Collection;
 

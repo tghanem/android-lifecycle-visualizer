@@ -1,4 +1,4 @@
-package impl.graphics;
+package interfaces.graphics.dsvl.model;
 
 import impl.model.dstl.LifecycleEventHandler;
 import interfaces.consumers.LifecycleNodeConsumer;

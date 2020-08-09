@@ -5,10 +5,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
-import impl.graphics.ActivityMetadataToRender;
+import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
 import impl.model.dstl.LifecycleAwareComponent;
 import interfaces.IActivityFileProcessingController;
-import interfaces.IActivityViewService;
+import interfaces.graphics.dsvl.IActivityViewService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;

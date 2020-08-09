@@ -5,13 +5,13 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import impl.graphics.CircularLifecycleNode;
-import impl.graphics.LifecycleHandlerNode;
-import impl.graphics.ResourceAcquisitionLifecycleNode;
-import impl.graphics.ResourceReleaseLifecycleNode;
+import interfaces.graphics.dsvl.model.CircularLifecycleNode;
+import interfaces.graphics.dsvl.model.LifecycleHandlerNode;
+import interfaces.graphics.dsvl.model.ResourceAcquisitionLifecycleNode;
+import interfaces.graphics.dsvl.model.ResourceReleaseLifecycleNode;
 import impl.model.dstl.*;
 import interfaces.IActivityFileModifier;
-import interfaces.ILifecycleNodeFactory;
+import interfaces.graphics.dsvl.ILifecycleNodeFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

@@ -1,4 +1,4 @@
-package impl.graphics;
+package interfaces.graphics.dsvl.model;
 
 import com.intellij.psi.PsiClass;
 import impl.model.dstl.LifecycleEventHandler;

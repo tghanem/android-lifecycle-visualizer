@@ -1,10 +1,10 @@
-package interfaces;
+package interfaces.graphics.dsvl;
 
 import com.intellij.psi.PsiClass;
-import impl.graphics.CircularLifecycleNode;
-import impl.graphics.LifecycleHandlerNode;
-import impl.graphics.ResourceAcquisitionLifecycleNode;
-import impl.graphics.ResourceReleaseLifecycleNode;
+import interfaces.graphics.dsvl.model.CircularLifecycleNode;
+import interfaces.graphics.dsvl.model.LifecycleHandlerNode;
+import interfaces.graphics.dsvl.model.ResourceAcquisitionLifecycleNode;
+import interfaces.graphics.dsvl.model.ResourceReleaseLifecycleNode;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;

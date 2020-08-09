@@ -1,10 +1,10 @@
-package impl.graphics;
+package interfaces.graphics.dsvl.model;
 
 import com.intellij.openapi.components.ServiceManager;
 import impl.model.dstl.LifecycleEventHandler;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
-import interfaces.ILifecycleNodeFactory;
+import interfaces.graphics.dsvl.ILifecycleNodeFactory;
 
 import javax.swing.*;
 import java.awt.*;

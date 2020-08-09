@@ -39,7 +39,7 @@
                 serviceImplementation="impl.services.FileProcessorService" />
 
         <applicationService
-                serviceInterface="interfaces.IActivityViewService"
+                serviceInterface="interfaces.graphics.dsvl.IActivityViewService"
                 serviceImplementation="impl.services.ActivityViewService"/>
 
         <applicationService
@@ -51,7 +51,7 @@
                 serviceImplementation="impl.services.ActivityFileModifierService"/>
 
         <applicationService
-                serviceInterface="interfaces.ILifecycleNodeFactory"
+                serviceInterface="interfaces.graphics.dsvl.ILifecycleNodeFactory"
                 serviceImplementation="impl.services.LifecycleNodeFactory"/>
 
         <applicationService

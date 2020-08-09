@@ -1,6 +1,6 @@
 package interfaces.consumers;
 
-import impl.graphics.LifecycleNode;
+import interfaces.graphics.dsvl.model.LifecycleNode;
 
 @FunctionalInterface
 public interface LifecycleNodeConsumer {

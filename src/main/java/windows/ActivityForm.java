@@ -1,29 +1,31 @@
 package windows;
 
-import impl.graphics.ActivityMetadataToRender;
-import impl.graphics.LifecyclePanel;
-import interfaces.IActivityViewProvider;
+import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
+import interfaces.graphics.dsvl.model.LifecyclePanel;
+import interfaces.graphics.dsvl.IActivityViewProvider;
 
 import javax.swing.*;
 
 public class ActivityForm implements IActivityViewProvider {
     private JPanel mainPanel;
-    private LifecyclePanel panel;
+
+    private JPanel navigatorPanel;
+    private LifecyclePanel lifecyclePanel;
 
     @Override
     public void display(ActivityMetadataToRender metadata) {
-        panel.populate(metadata);
-        panel.revalidate();
-        panel.repaint();
+        lifecyclePanel.populate(metadata);
+        lifecyclePanel.revalidate();
+        lifecyclePanel.repaint();
     }
 
     public JPanel getContent() {
-        return panel;
+        return mainPanel;
     }
 
     private void createUIComponents() {
-        panel = new LifecyclePanel();
+        lifecyclePanel = new LifecyclePanel();
         mainPanel = new JPanel();
-        mainPanel.add(panel);
+        mainPanel.add(lifecyclePanel);
     }
 }

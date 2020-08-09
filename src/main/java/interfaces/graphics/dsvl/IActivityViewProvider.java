@@ -1,6 +1,6 @@
-package interfaces;
+package interfaces.graphics.dsvl;
 
-import impl.graphics.ActivityMetadataToRender;
+import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
 
 public interface IActivityViewProvider {
     void display(ActivityMetadataToRender metadata);

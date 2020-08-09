@@ -1,4 +1,4 @@
-package impl.graphics;
+package interfaces.graphics.dsvl.model;
 
 import javax.swing.*;
 import java.util.Objects;
