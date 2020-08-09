@@ -52,6 +52,6 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
 
         ServiceManager
                 .getService(IActivityFileProcessingController.class)
-                .setProcessedActivityFile(file);
+                .setProcessedActivityFile(file, activityFileDocument.get());
     }
 }
