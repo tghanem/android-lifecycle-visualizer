@@ -4,7 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.util.PsiTreeUtil;
-import interfaces.ILifecycleEventHandlerAnalyzer;
+import interfaces.ICallbackMethodAnalyzer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
 
-public class FullQualifiedClassAndMethodNamesAnalyzer<T> implements ILifecycleEventHandlerAnalyzer<T> {
-    public FullQualifiedClassAndMethodNamesAnalyzer(
+public class FullyQualifiedClassAndMethodNamesAnalyzer<T> implements ICallbackMethodAnalyzer<T> {
+    public FullyQualifiedClassAndMethodNamesAnalyzer(
             HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, T>> methodCallsToMatch) {
 
         this.methodCallsToMatch = methodCallsToMatch;

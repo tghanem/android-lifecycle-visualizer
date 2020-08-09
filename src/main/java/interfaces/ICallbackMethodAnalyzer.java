@@ -4,6 +4,6 @@ import com.intellij.psi.PsiMethod;
 
 import java.util.List;
 
-public interface ILifecycleEventHandlerAnalyzer<T> {
+public interface ICallbackMethodAnalyzer<T> {
     List<T> analyze(PsiMethod method);
 }

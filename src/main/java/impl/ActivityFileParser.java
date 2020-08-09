@@ -6,13 +6,13 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
-import impl.model.dstl.LifecycleAwareComponent;
-import impl.model.dstl.LifecycleEventHandler;
+import impl.model.dstl.Activity;
+import impl.model.dstl.CallbackMethod;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
 import interfaces.IActivityFileParser;
-import interfaces.ILifecycleEventHandlerAnalyzer;
-import interfaces.ILifecycleEventHandlerAnalyzerFactory;
+import interfaces.ICallbackMethodAnalyzer;
+import interfaces.ICallbackMethodAnalyzerFactory;
 import org.jetbrains.kotlin.psi.KtFile;
 
 import java.util.ArrayList;
@@ -31,31 +31,31 @@ public class ActivityFileParser implements IActivityFileParser {
                     "onDestroy");
 
     @Override
-    public Optional<LifecycleAwareComponent> parse(PsiFile file) {
+    public Optional<Activity> parse(PsiFile file) {
         Optional<PsiClass[]> classes = getClasses(file);
 
         if (!classes.isPresent() || classes.get().length == 0) {
             return Optional.empty();
         }
 
-        List<LifecycleEventHandler> handlers = new ArrayList<>();
+        List<CallbackMethod> handlers = new ArrayList<>();
 
         PsiClass psiClass = classes.get()[0];
 
-        ILifecycleEventHandlerAnalyzerFactory analyzerFactory =
-                ServiceManager.getService(ILifecycleEventHandlerAnalyzerFactory.class);
+        ICallbackMethodAnalyzerFactory analyzerFactory =
+                ServiceManager.getService(ICallbackMethodAnalyzerFactory.class);
 
-        ILifecycleEventHandlerAnalyzer<ResourceAcquisition> resourceAcquisitionAnalyzer =
+        ICallbackMethodAnalyzer<ResourceAcquisition> resourceAcquisitionAnalyzer =
                 analyzerFactory.createResourceAcquisitionAnalyzer();
 
-        ILifecycleEventHandlerAnalyzer<ResourceRelease> resourceReleaseAnalyzer =
+        ICallbackMethodAnalyzer<ResourceRelease> resourceReleaseAnalyzer =
                 analyzerFactory.createResourceReleaseAnalyzer();
 
         try {
             for (PsiMethod method : psiClass.getAllMethods()) {
                 if (callbacks.contains(method.getName())) {
                     handlers.add(
-                            new LifecycleEventHandler(
+                            new CallbackMethod(
                                     method,
                                     resourceAcquisitionAnalyzer.analyze(method),
                                     resourceReleaseAnalyzer.analyze(method)));
@@ -65,7 +65,7 @@ public class ActivityFileParser implements IActivityFileParser {
             return Optional.empty();
         }
 
-        return Optional.of(new LifecycleAwareComponent(psiClass, handlers));
+        return Optional.of(new Activity(psiClass, handlers));
     }
 
     private Optional<PsiClass[]> getClasses(PsiFile file) {

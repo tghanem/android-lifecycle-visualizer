@@ -1,27 +1,27 @@
 package interfaces.graphics.dsvl.model;
 
 import com.intellij.psi.PsiClass;
-import impl.model.dstl.LifecycleEventHandler;
+import impl.model.dstl.CallbackMethod;
 
 import java.util.List;
 
 public class ActivityMetadataToRender {
     public ActivityMetadataToRender(
             PsiClass activityClass,
-            List<LifecycleEventHandler> handlers) {
+            List<CallbackMethod> callbackMethods) {
 
         this.activityClass = activityClass;
-        this.handlers = handlers;
+        this.callbackMethods = callbackMethods;
     }
 
     public PsiClass getActivityClass() {
         return activityClass;
     }
 
-    public List<LifecycleEventHandler> getHandlers() {
-        return handlers;
+    public List<CallbackMethod> getCallbackMethods() {
+        return callbackMethods;
     }
 
     private final PsiClass activityClass;
-    private final List<LifecycleEventHandler> handlers;
+    private final List<CallbackMethod> callbackMethods;
 }

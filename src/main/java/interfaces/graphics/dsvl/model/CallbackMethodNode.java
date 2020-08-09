@@ -1,6 +1,6 @@
 package interfaces.graphics.dsvl.model;
 
-import impl.model.dstl.LifecycleEventHandler;
+import impl.model.dstl.CallbackMethod;
 import interfaces.consumers.LifecycleNodeConsumer;
 
 import javax.swing.*;
@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class LifecycleHandlerNode extends LifecycleNode {
-    public LifecycleHandlerNode(Optional<LifecycleEventHandler> handler, String name) {
+public class CallbackMethodNode extends LifecycleNode {
+    public CallbackMethodNode(Optional<CallbackMethod> handler, String name) {
         super(name);
 
         this.handler = handler;
@@ -24,13 +24,13 @@ public class LifecycleHandlerNode extends LifecycleNode {
         this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("handler.png")));
     }
 
-    public void setHandler(LifecycleEventHandler value) {
+    public void setHandler(CallbackMethod value) {
         handler = Optional.of(value);
 
         this.setForeground(Color.BLACK);
     }
 
-    public Optional<LifecycleEventHandler> getHandler() {
+    public Optional<CallbackMethod> getHandler() {
         return handler;
     }
 
@@ -57,8 +57,8 @@ public class LifecycleHandlerNode extends LifecycleNode {
 
         processNode.accept(depth, node);
 
-        if (node instanceof LifecycleHandlerNode) {
-            LifecycleHandlerNode handlerNode = (LifecycleHandlerNode) node;
+        if (node instanceof CallbackMethodNode) {
+            CallbackMethodNode handlerNode = (CallbackMethodNode) node;
 
             for (LifecycleNode link : handlerNode.getNextNodes()) {
                 traverseInternal(depth + 1, link, processNode);
@@ -67,5 +67,5 @@ public class LifecycleHandlerNode extends LifecycleNode {
     }
 
     private final List<LifecycleNode> nextNodes;
-    private Optional<LifecycleEventHandler> handler;
+    private Optional<CallbackMethod> handler;
 }

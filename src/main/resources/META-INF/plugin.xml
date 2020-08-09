@@ -25,7 +25,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow
                 anchor="bottom"
-                factoryClass="windows.WindowFactory"
+                factoryClass="impl.toolwindows.ActivityLifecycleToolWindowFactory"
                 icon="/tool_window_icon.png"
                 id="Activity Navigator"
                 secondary="true"/>
@@ -55,8 +55,8 @@
                 serviceImplementation="impl.services.LifecycleNodeFactory"/>
 
         <applicationService
-                serviceInterface="interfaces.ILifecycleEventHandlerAnalyzerFactory"
-                serviceImplementation="impl.services.LifecycleEventHandlerAnalyzerFactory"/>
+                serviceInterface="interfaces.ICallbackMethodAnalyzerFactory"
+                serviceImplementation="impl.services.CallbackMethodAnalyzerFactory"/>
 
         <applicationService
                 serviceInterface="interfaces.IActivityFileProcessingController"

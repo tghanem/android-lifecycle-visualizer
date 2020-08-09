@@ -3,7 +3,7 @@ package impl.services;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.psi.PsiFile;
 import impl.ActivityFileParser;
-import impl.model.dstl.LifecycleAwareComponent;
+import impl.model.dstl.Activity;
 import interfaces.IActivityFileParser;
 import interfaces.IActivityFileProcessingController;
 import interfaces.IActivityFileProcessor;
@@ -29,7 +29,7 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
             return;
         }
 
-        Optional<LifecycleAwareComponent> activityFileDocument =
+        Optional<Activity> activityFileDocument =
                 lifecycleParser.parse(file);
 
         if (!activityFileDocument.isPresent()) {
@@ -38,7 +38,7 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
 
         ServiceManager
                 .getService(IActivityViewService.class)
-                .displayActivityView(activityFileDocument.get());
+                .displayActivity(activityFileDocument.get());
 
         ServiceManager
                 .getService(IActivityFileProcessingController.class)

@@ -1,7 +1,7 @@
 package interfaces;
 
 import com.intellij.psi.PsiFile;
-import impl.model.dstl.LifecycleAwareComponent;
+import impl.model.dstl.Activity;
 
 import java.util.Optional;
 
@@ -10,7 +10,7 @@ public interface IActivityFileProcessingController {
 
     void setProcessedActivityFile(
             PsiFile file,
-            LifecycleAwareComponent component);
+            Activity activity);
 
-    Optional<LifecycleAwareComponent> getLastDisplayedLifecycleComponent();
+    Optional<Activity> getLastDisplayedActivity();
 }

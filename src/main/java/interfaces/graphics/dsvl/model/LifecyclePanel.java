@@ -1,7 +1,7 @@
 package interfaces.graphics.dsvl.model;
 
 import com.intellij.openapi.components.ServiceManager;
-import impl.model.dstl.LifecycleEventHandler;
+import impl.model.dstl.CallbackMethod;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
 import interfaces.graphics.dsvl.IActivityViewProvider;
@@ -24,7 +24,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
     public void display(ActivityMetadataToRender metadata) {
         subtreeVisibleHashMap.clear();
 
-        LifecycleHandlerNode root =
+        CallbackMethodNode root =
                 buildLifecycleGraph(
                         metadata,
                         node -> {
@@ -39,20 +39,20 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
     private void processNodeClicked(
             LifecycleNode node) {
 
-        if (node instanceof LifecycleHandlerNode) {
-            LifecycleHandlerNode lifecycleHandlerNode =
-                    (LifecycleHandlerNode) node;
+        if (node instanceof CallbackMethodNode) {
+            CallbackMethodNode callbackMethodNode =
+                    (CallbackMethodNode) node;
 
             Boolean subtreeVisible =
                     subtreeVisibleHashMap.get(node);
 
             if (!subtreeVisible) {
-                for (LifecycleNode nextNode : lifecycleHandlerNode.getNextNodes()) {
+                for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
                     nextNode.setVisible(true);
                 }
                 subtreeVisibleHashMap.replace(node, true);
             } else {
-                for (LifecycleNode nextNode : lifecycleHandlerNode.getNextNodes()) {
+                for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
                     setNodeVisibility(nextNode, false);
                 }
                 subtreeVisibleHashMap.replace(node, false);
@@ -64,9 +64,9 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
             LifecycleNode node,
             boolean visibility) {
 
-        if (node instanceof LifecycleHandlerNode) {
-            LifecycleHandlerNode lifecycleHandlerNode = (LifecycleHandlerNode) node;
-            for (LifecycleNode nextNode : lifecycleHandlerNode.getNextNodes()) {
+        if (node instanceof CallbackMethodNode) {
+            CallbackMethodNode callbackMethodNode = (CallbackMethodNode) node;
+            for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
                 setNodeVisibility(nextNode, visibility);
             }
             subtreeVisibleHashMap.replace(node, false);
@@ -149,8 +149,8 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         for (List<LifecycleNode> row : rows) {
             for (LifecycleNode node : row) {
-                if (node instanceof LifecycleHandlerNode) {
-                    LifecycleHandlerNode handlerNode = (LifecycleHandlerNode) node;
+                if (node instanceof CallbackMethodNode) {
+                    CallbackMethodNode handlerNode = (CallbackMethodNode) node;
 
                     for (LifecycleNode nextNode : handlerNode.getNextNodes()) {
                         if (nextNode.isVisible()) {
@@ -178,14 +178,14 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
         graphics.draw(path);
     }
 
-    private LifecycleHandlerNode buildLifecycleGraph(
+    private CallbackMethodNode buildLifecycleGraph(
             ActivityMetadataToRender metadata,
             Consumer<LifecycleNode> repaint) {
 
         ILifecycleNodeFactory lifecycleNodeFactory =
                 ServiceManager.getService(ILifecycleNodeFactory.class);
 
-        LifecycleHandlerNode onCreate =
+        CallbackMethodNode onCreate =
                 buildLifecycleHandlerNode(
                         lifecycleNodeFactory,
                         metadata,
@@ -194,7 +194,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         onCreate.setVisible(true);
 
-        LifecycleHandlerNode onStart =
+        CallbackMethodNode onStart =
                 buildLifecycleHandlerNode(
                         lifecycleNodeFactory,
                         metadata,
@@ -203,7 +203,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         onCreate.addNextNode(0, onStart);
 
-        LifecycleHandlerNode onResume =
+        CallbackMethodNode onResume =
                 buildLifecycleHandlerNode(
                         lifecycleNodeFactory,
                         metadata,
@@ -212,7 +212,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         onStart.addNextNode(0, onResume);
 
-        LifecycleHandlerNode onPause =
+        CallbackMethodNode onPause =
                 buildLifecycleHandlerNode(
                         lifecycleNodeFactory,
                         metadata,
@@ -221,7 +221,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         onResume.addNextNode(0, onPause);
 
-        LifecycleHandlerNode onStop =
+        CallbackMethodNode onStop =
                 buildLifecycleHandlerNode(
                         lifecycleNodeFactory,
                         metadata,
@@ -230,19 +230,19 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         onPause.addNextNode(
                 0,
-                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                lifecycleNodeFactory.createCircularLifecycleNode(
                         metadata.getActivityClass(),
                         onResume));
 
         onPause.addNextNode(
                 0,
-                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                lifecycleNodeFactory.createCircularLifecycleNode(
                         metadata.getActivityClass(),
                         onCreate));
 
         onPause.addNextNode(0, onStop);
 
-        LifecycleHandlerNode onRestart =
+        CallbackMethodNode onRestart =
                 buildLifecycleHandlerNode(
                         lifecycleNodeFactory,
                         metadata,
@@ -251,11 +251,11 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         onRestart.addNextNode(
                 0,
-                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                lifecycleNodeFactory.createCircularLifecycleNode(
                         metadata.getActivityClass(),
                         onStart));
 
-        LifecycleHandlerNode onDestroy =
+        CallbackMethodNode onDestroy =
                 buildLifecycleHandlerNode(
                         lifecycleNodeFactory,
                         metadata,
@@ -267,7 +267,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
 
         onStop.addNextNode(
                 0,
-                lifecycleNodeFactory.createCircularLifecycleHandlerNode(
+                lifecycleNodeFactory.createCircularLifecycleNode(
                         metadata.getActivityClass(),
                         onCreate));
 
@@ -282,11 +282,11 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
         return onCreate;
     }
 
-    private Optional<LifecycleEventHandler> findByName(
-            List<LifecycleEventHandler> handlers,
+    private Optional<CallbackMethod> findByName(
+            List<CallbackMethod> handlers,
             String handlerName) {
 
-        for (LifecycleEventHandler handler : handlers) {
+        for (CallbackMethod handler : handlers) {
             if (handler.getPsiElement().getName().equals(handlerName)) {
                 return Optional.of(handler);
             }
@@ -294,21 +294,21 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
         return Optional.empty();
     }
 
-    private LifecycleHandlerNode buildLifecycleHandlerNode(
+    private CallbackMethodNode buildLifecycleHandlerNode(
             ILifecycleNodeFactory lifecycleNodeFactory,
             ActivityMetadataToRender metadata,
             String handlerName,
             Consumer<LifecycleNode> repaint) {
 
-        Optional<LifecycleEventHandler> handler =
-                findByName(metadata.getHandlers(), handlerName);
+        Optional<CallbackMethod> handler =
+                findByName(metadata.getCallbackMethods(), handlerName);
 
-        LifecycleHandlerNode node =
-                lifecycleNodeFactory.createLifecycleHandlerNode(
+        CallbackMethodNode node =
+                lifecycleNodeFactory.createCallbackMethodNode(
                         metadata.getActivityClass(),
                         handlerName,
                         handler,
-                        lifecycleHandlerNode -> repaint.accept(lifecycleHandlerNode));
+                        callbackMethodNode -> repaint.accept(callbackMethodNode));
 
         if (handler.isPresent()) {
             for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
@@ -325,6 +325,6 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
         return node;
     }
 
-    private Optional<LifecycleHandlerNode> graphRoot;
+    private Optional<CallbackMethodNode> graphRoot;
     private HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap;
 }

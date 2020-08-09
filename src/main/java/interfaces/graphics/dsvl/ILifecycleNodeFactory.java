@@ -2,10 +2,10 @@ package interfaces.graphics.dsvl;
 
 import com.intellij.psi.PsiClass;
 import interfaces.graphics.dsvl.model.CircularLifecycleNode;
-import interfaces.graphics.dsvl.model.LifecycleHandlerNode;
+import interfaces.graphics.dsvl.model.CallbackMethodNode;
 import interfaces.graphics.dsvl.model.ResourceAcquisitionLifecycleNode;
 import interfaces.graphics.dsvl.model.ResourceReleaseLifecycleNode;
-import impl.model.dstl.LifecycleEventHandler;
+import impl.model.dstl.CallbackMethod;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
 
@@ -13,15 +13,15 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public interface ILifecycleNodeFactory {
-    LifecycleHandlerNode createLifecycleHandlerNode(
+    CallbackMethodNode createCallbackMethodNode(
             PsiClass ownerActivityClass,
-            String handlerName,
-            Optional<LifecycleEventHandler> eventHandler,
-            Consumer<LifecycleHandlerNode> onClick);
+            String callbackMethodName,
+            Optional<CallbackMethod> callbackMethod,
+            Consumer<CallbackMethodNode> onClick);
 
-    CircularLifecycleNode createCircularLifecycleHandlerNode(
+    CircularLifecycleNode createCircularLifecycleNode(
             PsiClass ownerActivityClass,
-            LifecycleHandlerNode targetLifecycleHandlerNode);
+            CallbackMethodNode targetCallbackMethodNode);
 
     ResourceAcquisitionLifecycleNode createResourceAcquisitionLifecycleNode(
             ResourceAcquisition resourceAcquisition);

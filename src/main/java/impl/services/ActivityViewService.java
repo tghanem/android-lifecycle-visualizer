@@ -3,7 +3,7 @@ package impl.services;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import impl.model.dstl.LifecycleAwareComponent;
+import impl.model.dstl.Activity;
 import interfaces.graphics.dsvl.IActivityViewService;
 import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
 import interfaces.graphics.dsvl.model.LifecyclePanel;
@@ -35,9 +35,9 @@ public class ActivityViewService implements IActivityViewService {
     }
 
     @Override
-    public void displayActivityView(LifecycleAwareComponent asComponent) {
+    public void displayActivity(Activity activity) {
         String activityFullyQualifiedName =
-                asComponent
+                activity
                         .getPsiElement()
                         .getQualifiedName();
 
@@ -53,18 +53,18 @@ public class ActivityViewService implements IActivityViewService {
 
             panel.display(
                     new ActivityMetadataToRender(
-                            asComponent.getPsiElement(),
-                            asComponent.getLifecycleEventHandlers()));
+                            activity.getPsiElement(),
+                            activity.getCallbackMethods()));
 
             Content activityContent =
                     ContentFactory
                         .SERVICE
                         .getInstance()
-                        .createContent(panel, asComponent.getPsiElement().getName(), false);
+                        .createContent(panel, activity.getPsiElement().getName(), false);
 
             activities.put(
                     activityFullyQualifiedName,
-                    new DisplayedActivity(asComponent, panel, activityContent));
+                    new DisplayedActivity(activity, panel, activityContent));
 
             if (activityViewHolder.isPresent()) {
                 activityViewHolder
@@ -77,16 +77,16 @@ public class ActivityViewService implements IActivityViewService {
 
     class DisplayedActivity {
         DisplayedActivity(
-                LifecycleAwareComponent lifecycleAwareComponent,
+                Activity activity,
                 LifecyclePanel panel,
                 Content content) {
 
-            this.lifecycleAwareComponent = lifecycleAwareComponent;
+            this.activity = activity;
             this.panel = panel;
             this.content = content;
         }
 
-        private final LifecycleAwareComponent lifecycleAwareComponent;
+        private final Activity activity;
         private final LifecyclePanel panel;
         private final Content content;
     }

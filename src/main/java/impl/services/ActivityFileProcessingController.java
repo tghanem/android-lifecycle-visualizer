@@ -1,18 +1,18 @@
 package impl.services;
 
 import com.intellij.psi.PsiFile;
-import impl.model.dstl.LifecycleAwareComponent;
+import impl.model.dstl.Activity;
 import interfaces.IActivityFileProcessingController;
 
 import java.util.Optional;
 
 public class ActivityFileProcessingController implements IActivityFileProcessingController {
     private Optional<PsiFile> lastProcessedActivityFile;
-    private Optional<LifecycleAwareComponent> lastDisplayedLifecycleComponent;
+    private Optional<Activity> lastDisplayedActivity;
 
     public ActivityFileProcessingController() {
         lastProcessedActivityFile = Optional.empty();
-        lastDisplayedLifecycleComponent = Optional.empty();
+        lastDisplayedActivity = Optional.empty();
     }
 
     @Override
@@ -35,14 +35,14 @@ public class ActivityFileProcessingController implements IActivityFileProcessing
     @Override
     public void setProcessedActivityFile(
             PsiFile file,
-            LifecycleAwareComponent component) {
+            Activity activity) {
 
         lastProcessedActivityFile = Optional.of(file);
-        lastDisplayedLifecycleComponent = Optional.of(component);
+        lastDisplayedActivity = Optional.of(activity);
     }
 
     @Override
-    public Optional<LifecycleAwareComponent> getLastDisplayedLifecycleComponent() {
-        return lastDisplayedLifecycleComponent;
+    public Optional<Activity> getLastDisplayedActivity() {
+        return lastDisplayedActivity;
     }
 }

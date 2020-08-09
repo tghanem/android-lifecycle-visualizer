@@ -6,7 +6,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import interfaces.graphics.dsvl.model.CircularLifecycleNode;
-import interfaces.graphics.dsvl.model.LifecycleHandlerNode;
+import interfaces.graphics.dsvl.model.CallbackMethodNode;
 import interfaces.graphics.dsvl.model.ResourceAcquisitionLifecycleNode;
 import interfaces.graphics.dsvl.model.ResourceReleaseLifecycleNode;
 import impl.model.dstl.*;
@@ -25,14 +25,14 @@ import java.util.function.Consumer;
 
 public class LifecycleNodeFactory implements ILifecycleNodeFactory {
     @Override
-    public LifecycleHandlerNode createLifecycleHandlerNode(
+    public CallbackMethodNode createCallbackMethodNode(
             PsiClass ownerActivityClass,
-            String handlerName,
-            Optional<LifecycleEventHandler> eventHandler,
-            Consumer<LifecycleHandlerNode> onClick) {
+            String callbackMethodName,
+            Optional<CallbackMethod> callbackMethod,
+            Consumer<CallbackMethodNode> onClick) {
 
-        LifecycleHandlerNode node =
-                new LifecycleHandlerNode(eventHandler, handlerName);
+        CallbackMethodNode node =
+                new CallbackMethodNode(callbackMethod, callbackMethodName);
 
         node.addActionListener(
                 new ActionListener() {
@@ -43,7 +43,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                 });
 
         attachToMouseRightClick(
-                createLifecycleHandlerNodeMenu(
+                createCallbackMethodNodeMenu(
                         ownerActivityClass,
                         node),
                 node);
@@ -52,15 +52,15 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
     }
 
     @Override
-    public CircularLifecycleNode createCircularLifecycleHandlerNode(
+    public CircularLifecycleNode createCircularLifecycleNode(
             PsiClass ownerActivityClass,
-            LifecycleHandlerNode targetLifecycleHandlerNode) {
+            CallbackMethodNode targetCallbackMethodNode) {
 
         CircularLifecycleNode node =
-                new CircularLifecycleNode(targetLifecycleHandlerNode);
+                new CircularLifecycleNode(targetCallbackMethodNode);
 
         attachToMouseRightClick(
-                createLifecycleHandlerNodeMenu(ownerActivityClass, targetLifecycleHandlerNode),
+                createCallbackMethodNodeMenu(ownerActivityClass, targetCallbackMethodNode),
                 node);
 
         return node;
@@ -130,9 +130,9 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
         }
     }
 
-    private JPopupMenu createLifecycleHandlerNodeMenu(
+    private JPopupMenu createCallbackMethodNodeMenu(
             PsiClass activityClass,
-            LifecycleHandlerNode node) {
+            CallbackMethodNode node) {
 
         HashMap<String, Runnable> menuItems =
                 new HashMap<>();
@@ -150,12 +150,12 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                         PsiMethod handlerElement =
                                 ServiceManager
                                         .getService(IActivityFileModifier.class)
-                                        .createAndAddLifecycleHandlerMethod(
+                                        .createAndAddCallbackMethod(
                                                 activityClass,
                                                 node.getName());
 
                         node.setHandler(
-                                new LifecycleEventHandler(
+                                new CallbackMethod(
                                         handlerElement,
                                         new ArrayList<>(),
                                         new ArrayList<>()));

@@ -6,14 +6,14 @@ import interfaces.IActivityFileModifier;
 
 public class ActivityFileModifierService implements IActivityFileModifier {
     @Override
-    public PsiMethod createAndAddLifecycleHandlerMethod(PsiClass activityClass, String handlerName) {
+    public PsiMethod createAndAddCallbackMethod(PsiClass activityClass, String callbackMethodName) {
         PsiFile activityFile =
                 activityClass.getContainingFile();
 
         PsiMethod handlerMethod =
                 PsiElementFactory
                         .getInstance(activityFile.getProject())
-                        .createMethod(handlerName, PsiType.VOID);
+                        .createMethod(callbackMethodName, PsiType.VOID);
 
         handlerMethod
                 .getModifierList()

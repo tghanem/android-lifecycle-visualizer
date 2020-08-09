@@ -4,8 +4,8 @@ import com.intellij.psi.PsiMethod;
 
 import java.util.List;
 
-public class LifecycleEventHandler {
-    public LifecycleEventHandler(
+public class CallbackMethod {
+    public CallbackMethod(
             PsiMethod element,
             List<ResourceAcquisition> resourceAcquisitions,
             List<ResourceRelease> resourceReleases) {
