@@ -41,7 +41,7 @@ public class FileOpenListener implements FileEditorManagerListener {
             if (isActivity.orElse(false)) {
                 ServiceManager
                         .getService(IActivityViewService.class)
-                        .openActivity(psiFile);
+                        .openOrReloadActivity(psiFile);
             }
         } catch (Exception e) {
             ServiceManager
@@ -70,7 +70,7 @@ public class FileOpenListener implements FileEditorManagerListener {
             if (isActivity.orElse(false)) {
                 ServiceManager
                         .getService(IActivityViewService.class)
-                        .openActivity(psiFile);
+                        .openOrReloadActivity(psiFile);
             }
         } catch (Exception e) {
             ServiceManager

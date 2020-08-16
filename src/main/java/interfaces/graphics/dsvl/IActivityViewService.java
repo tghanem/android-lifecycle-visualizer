@@ -9,7 +9,7 @@ public interface IActivityViewService {
             Project project,
             ToolWindow toolWindow);
 
-    void openActivity(PsiFile activityFile);
+    void openOrReloadActivity(PsiFile activityFile) throws Exception;
 
     void closeActivity(PsiFile activityFile);
 }
