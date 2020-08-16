@@ -1,13 +1,10 @@
 package impl.services;
 
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.psi.PsiFile;
 import impl.ActivityFileParser;
 import impl.model.dstl.Activity;
 import interfaces.IActivityFileParser;
-import interfaces.IActivityFileProcessingController;
 import interfaces.IActivityFileProcessor;
-import interfaces.graphics.dsvl.IActivityViewService;
 
 import java.util.Optional;
 
@@ -19,29 +16,7 @@ public class ActivityFileProcessorService implements IActivityFileProcessor {
     }
 
     @Override
-    public void process(PsiFile file) {
-        Boolean shouldProcessActivityFile =
-                ServiceManager
-                    .getService(IActivityFileProcessingController.class)
-                    .shouldProcessActivityFile(file);
-
-        if (!shouldProcessActivityFile) {
-            return;
-        }
-
-        Optional<Activity> activityFileDocument =
-                lifecycleParser.parse(file);
-
-        if (!activityFileDocument.isPresent()) {
-            return;
-        }
-
-        ServiceManager
-                .getService(IActivityViewService.class)
-                .displayActivity(activityFileDocument.get());
-
-        ServiceManager
-                .getService(IActivityFileProcessingController.class)
-                .setProcessedActivityFile(file, activityFileDocument.get());
+    public Optional<Activity> process(PsiFile file) {
+        return lifecycleParser.parse(file);
     }
 }

@@ -35,10 +35,6 @@
                 serviceImplementation="impl.services.ActivityFileProcessorService"/>
 
         <applicationService
-                serviceInterface="interfaces.IFileProcessor"
-                serviceImplementation="impl.services.FileProcessorService" />
-
-        <applicationService
                 serviceInterface="interfaces.graphics.dsvl.IActivityViewService"
                 serviceImplementation="impl.services.ActivityViewService"/>
 
@@ -57,9 +53,5 @@
         <applicationService
                 serviceInterface="interfaces.ICallbackMethodAnalyzerFactory"
                 serviceImplementation="impl.services.CallbackMethodAnalyzerFactory"/>
-
-        <applicationService
-                serviceInterface="interfaces.IActivityFileProcessingController"
-                serviceImplementation="impl.services.ActivityFileProcessingController"/>
     </extensions>
 </idea-plugin>
