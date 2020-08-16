@@ -68,32 +68,39 @@ public class ActivityViewService implements IActivityViewService {
     public void openOrReloadActivity(
             PsiFile activityFile) throws Exception {
 
-        Optional<ActivityViewContents> contents =
+        Optional<Integer> contentsIndex =
                 getActivityViewContents(activityFile);
 
-        if (contents.isPresent()) {
+        if (contentsIndex.isPresent()) {
+            ActivityViewContents contents =
+                    activities.get(contentsIndex.get());
+
             if (activityViewHolder.isPresent()) {
                 String newContentsDigest =
                         calculatePsiFileDigest(activityFile);
 
-                if (newContentsDigest.equals(contents.get().activityFileDigest)) {
+                if (newContentsDigest.equals(contents.activityFileDigest)) {
                     activityViewHolder
                             .get()
                             .getContentManager()
-                            .setSelectedContent(contents.get().content);
+                            .setSelectedContent(contents.content);
                 } else {
-                    activities.remove(contents.get());
+                    activities.remove(contentsIndex.get());
 
                     activityViewHolder
                             .get()
                             .getContentManager()
-                            .removeContent(contents.get().content, true);
+                            .removeContent(contents.content, true);
 
-                    createAndAddNewActivityViewContents(activityFile);
+                    createAndAddNewActivityViewContents(
+                            activityFile,
+                            contentsIndex);
                 }
             }
         } else {
-            createAndAddNewActivityViewContents(activityFile);
+            createAndAddNewActivityViewContents(
+                    activityFile,
+                    Optional.empty());
         }
     }
 
@@ -101,24 +108,27 @@ public class ActivityViewService implements IActivityViewService {
     public void closeActivity(
             PsiFile activityFile) {
 
-        Optional<ActivityViewContents> contents =
+        Optional<Integer> contentsIndex =
                 getActivityViewContents(activityFile);
 
-        if (contents.isEmpty()) {
+        if (contentsIndex.isEmpty()) {
             return;
         }
 
-        activities.remove(contents.get());
+        ActivityViewContents contents =
+                activities.get(contentsIndex.get());
+
+        activities.remove(contents);
 
         if (activityViewHolder.isPresent()) {
             activityViewHolder
                     .get()
                     .getContentManager()
-                    .removeContent(contents.get().content, true);
+                    .removeContent(contents.content, true);
         }
     }
 
-    private Optional<ActivityViewContents> getActivityViewContents(
+    private Optional<Integer> getActivityViewContents(
             PsiFile activityFile) {
 
         String thisActivityFilePath =
@@ -126,9 +136,10 @@ public class ActivityViewService implements IActivityViewService {
                         .getVirtualFile()
                         .getCanonicalPath();
 
-        for (ActivityViewContents contents : activities) {
+        for (int i = 0; i < activities.size(); i++) {
             String thatActivityFilePath =
-                    contents
+                    activities
+                            .get(i)
                             .activity
                             .getPsiElement()
                             .getContainingFile()
@@ -136,25 +147,37 @@ public class ActivityViewService implements IActivityViewService {
                             .getCanonicalPath();
 
             if (thatActivityFilePath.equals(thisActivityFilePath)) {
-                return Optional.of(contents);
+                return Optional.of(i);
             }
         }
         return Optional.empty();
     }
 
     private void createAndAddNewActivityViewContents(
-            PsiFile activityFile) throws Exception {
+            PsiFile activityFile,
+            Optional<Integer> index) throws Exception {
 
         ActivityViewContents newContents =
                 createActivityViewContents(activityFile);
 
-        activities.add(newContents);
+        if (index.isPresent()) {
+            activities.add(index.get(), newContents);
+        } else {
+            activities.add(newContents);
+        }
 
         if (activityViewHolder.isPresent()) {
-            activityViewHolder
-                    .get()
-                    .getContentManager()
-                    .addContent(newContents.content);
+            if (index.isPresent()) {
+                activityViewHolder
+                        .get()
+                        .getContentManager()
+                        .addContent(newContents.content, index.get());
+            } else {
+                activityViewHolder
+                        .get()
+                        .getContentManager()
+                        .addContent(newContents.content);
+            }
 
             activityViewHolder
                     .get()
