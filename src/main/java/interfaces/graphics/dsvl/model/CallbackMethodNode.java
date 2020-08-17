@@ -16,8 +16,8 @@ public class CallbackMethodNode extends LifecycleNode {
         this.handler = handler;
         this.nextNodes = new ArrayList<>();
 
-        if (!handler.isPresent()) {
-            this.setForeground(Color.GRAY);
+        if (handler.isPresent()) {
+            this.setBackground(Color.YELLOW);
         }
 
         this.setVisible(false);
@@ -26,8 +26,9 @@ public class CallbackMethodNode extends LifecycleNode {
 
     public void setHandler(CallbackMethod value) {
         handler = Optional.of(value);
-
-        this.setForeground(Color.BLACK);
+        this.setBackground(Color.YELLOW);
+        revalidate();
+        repaint();
     }
 
     public Optional<CallbackMethod> getHandler() {

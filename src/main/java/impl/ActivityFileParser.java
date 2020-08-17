@@ -25,6 +25,7 @@ public class ActivityFileParser implements IActivityFileParser {
             Arrays.asList(
                     "onCreate",
                     "onStart",
+                    "onRestart",
                     "onResume",
                     "onPause",
                     "onStop",
@@ -52,7 +53,7 @@ public class ActivityFileParser implements IActivityFileParser {
                 analyzerFactory.createResourceReleaseAnalyzer();
 
         try {
-            for (PsiMethod method : psiClass.getAllMethods()) {
+            for (PsiMethod method : psiClass.getMethods()) {
                 if (callbacks.contains(method.getName())) {
                     handlers.add(
                             new CallbackMethod(
