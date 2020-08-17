@@ -19,7 +19,7 @@
 
     <applicationListeners>
         <listener class="impl.listeners.FileOpenListener"
-                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener" />
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </applicationListeners>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -53,5 +53,14 @@
         <applicationService
                 serviceInterface="interfaces.ICallbackMethodAnalyzerFactory"
                 serviceImplementation="impl.services.CallbackMethodAnalyzerFactory"/>
+
+        <applicationService
+                serviceImplementation="impl.settings.AppSettingsState"/>
+
+        <applicationConfigurable
+                parentId="tools"
+                instance="impl.settings.AppSettingsConfigurable"
+                id="impl.settings.AppSettingsConfigurable"
+                displayName="Activity Lifecycle Navigator"/>
     </extensions>
 </idea-plugin>

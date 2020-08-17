@@ -1,0 +1,47 @@
+package impl.settings;
+
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
+import com.intellij.util.xmlb.XmlSerializerUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@State(
+        name="impl.settings.AppSettingsState",
+        storages = {@Storage("ActivityLifecycleNavigator.xml")}
+)
+public class AppSettingsState implements PersistentStateComponent<AppSettingsState> {
+
+    public List<String> resourceAcquisitions;
+    public List<String> resourceReleases;
+
+    public static AppSettingsState getInstance() {
+        return ServiceManager.getService(AppSettingsState.class);
+    }
+
+    public AppSettingsState() {
+        resourceAcquisitions = new ArrayList<>();
+        resourceAcquisitions.add("Camera=android.hardware.Camera.open");
+        resourceAcquisitions.add("Bluetooth=com.google.android.things.userdriver.UserDriverManager.registerGnssDriver");
+
+        resourceReleases = new ArrayList<>();
+        resourceReleases.add("Camera=android.hardware.Camera.release");
+        resourceReleases.add("Bluetooth=com.google.android.things.userdriver.UserDriverManager.unregisterGnssDriver");
+    }
+
+    @Nullable
+    @Override
+    public AppSettingsState getState() {
+        return this;
+    }
+
+    @Override
+    public void loadState(@NotNull AppSettingsState state) {
+        XmlSerializerUtil.copyBean(state, this);
+    }
+}

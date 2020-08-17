@@ -5,6 +5,7 @@ import com.intellij.psi.PsiMethodCallExpression;
 import impl.analyzers.FullyQualifiedClassAndMethodNamesAnalyzer;
 import impl.analyzers.FullyQualifiedClassAndMethodName;
 import impl.model.dstl.*;
+import impl.settings.AppSettingsState;
 import interfaces.ICallbackMethodAnalyzer;
 import interfaces.ICallbackMethodAnalyzerFactory;
 
@@ -20,8 +21,24 @@ public class CallbackMethodAnalyzerFactory implements ICallbackMethodAnalyzerFac
         HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, ResourceAcquisition>> map =
                 new HashMap<>();
 
-        map.put(FullyQualifiedClassAndMethodName.CameraOpen, e -> new CameraAcquired(e));
-        map.put(FullyQualifiedClassAndMethodName.GnssRegister, e -> new BluetoothAcquired(e));
+        List<String> resourceAcquisitions =
+                AppSettingsState.getInstance().resourceAcquisitions;
+
+        for (String acquisitionDefinition : resourceAcquisitions) {
+            String[] tokens = acquisitionDefinition.split("=");
+
+            if (tokens.length == 2) {
+                if (tokens[0].equals("Camera")) {
+                    map.put(
+                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
+                            e -> new CameraAcquired(e));
+                } else if (tokens[0].equals("Bluetooth")) {
+                    map.put(
+                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
+                            e -> new BluetoothAcquired(e));
+                }
+            }
+        }
 
         return
                 new CompoundResourceAcquisitionAnalyzer(
@@ -33,8 +50,24 @@ public class CallbackMethodAnalyzerFactory implements ICallbackMethodAnalyzerFac
         HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, ResourceRelease>> map =
                 new HashMap<>();
 
-        map.put(FullyQualifiedClassAndMethodName.CameraRelease, e -> new CameraReleased(e));
-        map.put(FullyQualifiedClassAndMethodName.GnssUnregister, e -> new BluetoothReleased(e));
+        List<String> resourceReleases =
+                AppSettingsState.getInstance().resourceReleases;
+
+        for (String releaseDefinition : resourceReleases) {
+            String[] tokens = releaseDefinition.split("=");
+
+            if (tokens.length == 2) {
+                if (tokens[0].equals("Camera")) {
+                    map.put(
+                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
+                            e -> new CameraReleased(e));
+                } else if (tokens[0].equals("Bluetooth")) {
+                    map.put(
+                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
+                            e -> new BluetoothReleased(e));
+                }
+            }
+        }
 
         return
                 new CompoundResourceReleaseAnalyzer(

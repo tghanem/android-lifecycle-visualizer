@@ -4,6 +4,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -43,5 +45,25 @@ public class Helper {
                 }
             }
         }
+    }
+
+    public static Boolean areEqual(
+            List<String> collection1,
+            List<String> collection2) {
+
+        HashSet<String> comparer =
+                new HashSet<>();
+
+        for (String item : collection1) {
+            comparer.add(item);
+        }
+
+        for (String item : collection2) {
+            if (comparer.add(item)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
