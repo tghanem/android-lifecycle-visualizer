@@ -5,11 +5,9 @@ import impl.model.dstl.ResourceRelease;
 import javax.swing.*;
 
 public class ResourceReleaseLifecycleNode extends LifecycleNode {
-    public ResourceReleaseLifecycleNode(
-            String name,
-            ResourceRelease resourceRelease) {
+    public ResourceReleaseLifecycleNode(ResourceRelease resourceRelease) {
 
-        super(name);
+        super(resourceRelease.getResourceName());
 
         this.resourceRelease = resourceRelease;
         this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("release.png")));

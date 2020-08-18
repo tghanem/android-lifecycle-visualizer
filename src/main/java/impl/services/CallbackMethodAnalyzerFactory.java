@@ -2,76 +2,59 @@ package impl.services;
 
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
-import impl.analyzers.FullyQualifiedClassAndMethodNamesAnalyzer;
 import impl.analyzers.FullyQualifiedClassAndMethodName;
-import impl.model.dstl.*;
+import impl.analyzers.FullyQualifiedClassAndMethodNamesAnalyzer;
+import impl.model.dstl.ResourceAcquisition;
+import impl.model.dstl.ResourceRelease;
 import impl.settings.AppSettingsState;
 import interfaces.ICallbackMethodAnalyzer;
 import interfaces.ICallbackMethodAnalyzerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class CallbackMethodAnalyzerFactory implements ICallbackMethodAnalyzerFactory {
     @Override
     public ICallbackMethodAnalyzer<ResourceAcquisition> createResourceAcquisitionAnalyzer() {
-        HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, ResourceAcquisition>> map =
-                new HashMap<>();
-
-        List<String> resourceAcquisitions =
-                AppSettingsState.getInstance().resourceAcquisitions;
-
-        for (String acquisitionDefinition : resourceAcquisitions) {
-            String[] tokens = acquisitionDefinition.split("=");
-
-            if (tokens.length == 2) {
-                if (tokens[0].equals("Camera")) {
-                    map.put(
-                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
-                            e -> new CameraAcquired(e));
-                } else if (tokens[0].equals("Bluetooth")) {
-                    map.put(
-                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
-                            e -> new BluetoothAcquired(e));
-                }
-            }
-        }
-
         return
                 new CompoundResourceAcquisitionAnalyzer(
-                        Arrays.asList(new FullyQualifiedClassAndMethodNamesAnalyzer<>(map)));
+                        Arrays.asList(
+                                new FullyQualifiedClassAndMethodNamesAnalyzer<>(
+                                        toHashMap(
+                                                AppSettingsState.getInstance().resourceAcquisitions,
+                                                (name, expression) -> new ResourceAcquisition(expression, name)))));
     }
 
     @Override
     public ICallbackMethodAnalyzer<ResourceRelease> createResourceReleaseAnalyzer() {
-        HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, ResourceRelease>> map =
+        return
+                new CompoundResourceReleaseAnalyzer(
+                        Arrays.asList(
+                                new FullyQualifiedClassAndMethodNamesAnalyzer<>(
+                                        toHashMap(
+                                                AppSettingsState.getInstance().resourceReleases,
+                                                (name, expression) -> new ResourceRelease(expression, name)))));
+    }
+
+    private <T> HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, T>> toHashMap(
+            Collection<String> serializedItems,
+            BiFunction<String, PsiMethodCallExpression, T> createResourceDescription) {
+
+        HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, T>> map =
                 new HashMap<>();
 
-        List<String> resourceReleases =
-                AppSettingsState.getInstance().resourceReleases;
-
-        for (String releaseDefinition : resourceReleases) {
-            String[] tokens = releaseDefinition.split("=");
+        for (String item : serializedItems) {
+            String[] tokens = item.split("=");
 
             if (tokens.length == 2) {
-                if (tokens[0].equals("Camera")) {
-                    map.put(
-                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
-                            e -> new CameraReleased(e));
-                } else if (tokens[0].equals("Bluetooth")) {
-                    map.put(
-                            FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
-                            e -> new BluetoothReleased(e));
-                }
+                map.put(
+                        FullyQualifiedClassAndMethodName.valueOf(tokens[1]),
+                        e -> createResourceDescription.apply(tokens[0], e));
             }
         }
 
-        return
-                new CompoundResourceReleaseAnalyzer(
-                        Arrays.asList(new FullyQualifiedClassAndMethodNamesAnalyzer<>(map)));
+        return map;
     }
 
     class CompoundResourceAcquisitionAnalyzer implements ICallbackMethodAnalyzer<ResourceAcquisition> {

@@ -5,11 +5,9 @@ import impl.model.dstl.ResourceAcquisition;
 import javax.swing.*;
 
 public class ResourceAcquisitionLifecycleNode extends LifecycleNode {
-    public ResourceAcquisitionLifecycleNode(
-            String name,
-            ResourceAcquisition resourceAcquisition) {
+    public ResourceAcquisitionLifecycleNode(ResourceAcquisition resourceAcquisition) {
 
-        super(name);
+        super(resourceAcquisition.getResourceName());
 
         this.resourceAcquisition = resourceAcquisition;
         this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("acquire.png")));

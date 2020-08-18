@@ -71,9 +71,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
             ResourceAcquisition resourceAcquisition) {
 
         ResourceAcquisitionLifecycleNode resourceAcquisitionNode =
-                new ResourceAcquisitionLifecycleNode(
-                        getContent(resourceAcquisition),
-                        resourceAcquisition);
+                new ResourceAcquisitionLifecycleNode(resourceAcquisition);
 
         HashMap<String, Runnable> menuItems = new HashMap<>();
 
@@ -93,9 +91,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
             ResourceRelease resourceRelease) {
 
         ResourceReleaseLifecycleNode resourceReleaseNode =
-                new ResourceReleaseLifecycleNode(
-                        getContent(resourceRelease),
-                        resourceRelease);
+                new ResourceReleaseLifecycleNode(resourceRelease);
 
         HashMap<String, Runnable> menuItems = new HashMap<>();
 
@@ -108,26 +104,6 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                 resourceReleaseNode);
 
         return resourceReleaseNode;
-    }
-
-    private String getContent(ResourceAcquisition acquisition) {
-        if (acquisition instanceof CameraAcquired) {
-            return "Camera";
-        } else if (acquisition instanceof BluetoothAcquired) {
-            return "Bluetooth";
-        } else {
-            return acquisition.getPsiElement().getText();
-        }
-    }
-
-    private String getContent(ResourceRelease release) {
-        if (release instanceof CameraReleased) {
-            return "Camera";
-        } else if (release instanceof BluetoothReleased) {
-            return "Bluetooth";
-        } else {
-            return release.getPsiElement().getText();
-        }
     }
 
     private JPopupMenu createCallbackMethodNodeMenu(
