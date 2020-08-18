@@ -27,11 +27,13 @@ public class AppSettingsState implements PersistentStateComponent<AppSettingsSta
     public AppSettingsState() {
         resourceAcquisitions = new ArrayList<>();
         resourceAcquisitions.add("Camera=android.hardware.Camera.open");
-        resourceAcquisitions.add("Bluetooth=com.google.android.things.userdriver.UserDriverManager.registerGnssDriver");
+        resourceAcquisitions.add("Camera=android.hardware.camera2.CameraManager.openCamera");
+        resourceAcquisitions.add("GPS=com.google.android.things.userdriver.UserDriverManager.registerGnssDriver");
+        resourceAcquisitions.add("GPS=android.location.LocationManager.requestLocationUpdates");
 
         resourceReleases = new ArrayList<>();
         resourceReleases.add("Camera=android.hardware.Camera.release");
-        resourceReleases.add("Bluetooth=com.google.android.things.userdriver.UserDriverManager.unregisterGnssDriver");
+        resourceReleases.add("GPS=com.google.android.things.userdriver.UserDriverManager.unregisterGnssDriver");
     }
 
     @Nullable

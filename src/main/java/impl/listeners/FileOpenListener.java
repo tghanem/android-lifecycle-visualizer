@@ -19,9 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class FileOpenListener implements FileEditorManagerListener {
@@ -30,62 +28,26 @@ public class FileOpenListener implements FileEditorManagerListener {
             @NotNull FileEditorManager source,
             @NotNull VirtualFile file) {
 
-        DumbService
-                .getInstance(source.getProject())
-                .runWhenSmart(() -> {
-                    try {
-                        PsiFile psiFile =
-                                PsiManager
-                                        .getInstance(source.getProject())
-                                        .findFile(file);
-
-                        Optional<Boolean> isActivity =
-                                isActivityFile(psiFile);
-
-                        if (isActivity.orElse(false)) {
-                            ServiceManager
-                                    .getService(IActivityViewService.class)
-                                    .openOrReloadActivity(psiFile);
-                        }
-                    } catch (Exception e) {
-                        ServiceManager
-                                .getService(INotificationService.class)
-                                .notify(source.getProject(), e);
-                    }
-                });
+        fileOpenedOrSelected(
+                file,
+                source.getProject(),
+                ServiceManager.getService(IActivityViewService.class),
+                ServiceManager.getService(INotificationService.class));
     }
 
     @Override
     public void selectionChanged(
             @NotNull FileEditorManagerEvent event) {
 
-        DumbService
-                .getInstance(event.getManager().getProject())
-                .runWhenSmart(() -> {
-                    try {
-                        if (event.getNewFile() == null) {
-                            return;
-                        }
+        if (event.getNewFile() == null) {
+            return;
+        }
 
-                        PsiFile psiFile =
-                                PsiManager
-                                        .getInstance(event.getManager().getProject())
-                                        .findFile(event.getNewFile());
-
-                        Optional<Boolean> isActivity =
-                                isActivityFile(psiFile);
-
-                        if (isActivity.orElse(false)) {
-                            ServiceManager
-                                    .getService(IActivityViewService.class)
-                                    .openOrReloadActivity(psiFile);
-                        }
-                    } catch (Exception e) {
-                        ServiceManager
-                                .getService(INotificationService.class)
-                                .notify(event.getManager().getProject(), e);
-                    }
-                });
+        fileOpenedOrSelected(
+                event.getNewFile(),
+                event.getManager().getProject(),
+                ServiceManager.getService(IActivityViewService.class),
+                ServiceManager.getService(INotificationService.class));
     }
 
     @Override
@@ -93,36 +55,81 @@ public class FileOpenListener implements FileEditorManagerListener {
             @NotNull FileEditorManager source,
             @NotNull VirtualFile file) {
 
+        fileClosed(
+                file,
+                source.getProject(),
+                ServiceManager.getService(IActivityViewService.class),
+                ServiceManager.getService(INotificationService.class));
+    }
+
+    private void fileOpenedOrSelected(
+            VirtualFile file,
+            Project project,
+            IActivityViewService viewService,
+            INotificationService notificationService) {
+
         DumbService
-                .getInstance(source.getProject())
+                .getInstance(project)
                 .runWhenSmart(() -> {
                     try {
+                        if (!file.isValid()) {
+                            return;
+                        }
+
                         PsiFile psiFile =
                                 PsiManager
-                                        .getInstance(source.getProject())
+                                        .getInstance(project)
                                         .findFile(file);
 
                         Optional<Boolean> isActivity =
-                                isActivityFile(psiFile);
+                                isActivityFile(psiFile, project);
 
                         if (isActivity.orElse(false)) {
-                            ServiceManager
-                                    .getService(IActivityViewService.class)
-                                    .closeActivity(psiFile);
+                            viewService.openOrReloadActivity(psiFile);
                         }
                     } catch (Exception e) {
-                        ServiceManager
-                                .getService(INotificationService.class)
-                                .notify(source.getProject(), e);
+                        notificationService.notify(project, e);
+                    }
+                });
+    }
+
+    private void fileClosed(
+            VirtualFile file,
+            Project project,
+            IActivityViewService viewService,
+            INotificationService notificationService) {
+
+        DumbService
+                .getInstance(project)
+                .runWhenSmart(() -> {
+                    try {
+                        if (!file.isValid()) {
+                            return;
+                        }
+
+                        PsiFile psiFile =
+                                PsiManager
+                                        .getInstance(project)
+                                        .findFile(file);
+
+                        Optional<Boolean> isActivity =
+                                isActivityFile(psiFile, project);
+
+                        if (isActivity.orElse(false)) {
+                            viewService.closeActivity(psiFile);
+                        }
+                    } catch (Exception e) {
+                        notificationService.notify(project, e);
                     }
                 });
     }
 
     private Optional<Boolean> isActivityFile(
-            PsiFile file) throws IOException, SAXException {
+            PsiFile file,
+            Project project) throws Exception {
 
         Optional<PsiFile> androidManifestFile =
-                findAndroidManifestFile(file.getProject());
+                findAndroidManifestFile(project);
 
         if (!androidManifestFile.isPresent()) {
             return Optional.empty();
@@ -143,9 +150,9 @@ public class FileOpenListener implements FileEditorManagerListener {
 
         return
                 Optional.of(
-                    Helper
-                            .findFirst(activityElements, element -> isActivityNameEqualTo(element, file.getName()))
-                            .isPresent());
+                        Helper
+                                .findFirst(activityElements, element -> isActivityNameEqualTo(element, file.getName()))
+                                .isPresent());
     }
 
     private Optional<PsiFile> findAndroidManifestFile(
