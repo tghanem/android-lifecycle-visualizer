@@ -52,18 +52,14 @@ public class ActivityFileParser implements IActivityFileParser {
         ICallbackMethodAnalyzer<ResourceRelease> resourceReleaseAnalyzer =
                 analyzerFactory.createResourceReleaseAnalyzer();
 
-        try {
-            for (PsiMethod method : psiClass.getMethods()) {
-                if (callbacks.contains(method.getName())) {
-                    handlers.add(
-                            new CallbackMethod(
-                                    method,
-                                    resourceAcquisitionAnalyzer.analyze(method),
-                                    resourceReleaseAnalyzer.analyze(method)));
-                }
+        for (PsiMethod method : psiClass.getMethods()) {
+            if (callbacks.contains(method.getName())) {
+                handlers.add(
+                        new CallbackMethod(
+                                method,
+                                resourceAcquisitionAnalyzer.analyze(method),
+                                resourceReleaseAnalyzer.analyze(method)));
             }
-        } catch (IndexNotReadyException ex) {
-            return Optional.empty();
         }
 
         return Optional.of(new Activity(psiClass, handlers));

@@ -194,10 +194,6 @@ public class ActivityViewService implements IActivityViewService {
                         .getService(IActivityFileProcessor.class)
                         .process(activityFile);
 
-        if (activity.isEmpty()) {
-            throw new Exception("Expected to find an Activity file in " + activityFile.getName());
-        }
-
         LifecyclePanel panel =
                 new LifecyclePanel();
 

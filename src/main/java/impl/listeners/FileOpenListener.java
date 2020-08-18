@@ -4,6 +4,7 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -29,54 +30,62 @@ public class FileOpenListener implements FileEditorManagerListener {
             @NotNull FileEditorManager source,
             @NotNull VirtualFile file) {
 
-        try {
-            PsiFile psiFile =
-                PsiManager
-                        .getInstance(source.getProject())
-                        .findFile(file);
+        DumbService
+                .getInstance(source.getProject())
+                .runWhenSmart(() -> {
+                    try {
+                        PsiFile psiFile =
+                                PsiManager
+                                        .getInstance(source.getProject())
+                                        .findFile(file);
 
-            Optional<Boolean> isActivity =
-                    isActivityFile(psiFile);
+                        Optional<Boolean> isActivity =
+                                isActivityFile(psiFile);
 
-            if (isActivity.orElse(false)) {
-                ServiceManager
-                        .getService(IActivityViewService.class)
-                        .openOrReloadActivity(psiFile);
-            }
-        } catch (Exception e) {
-            ServiceManager
-                    .getService(INotificationService.class)
-                    .notify(source.getProject(), e);
-        }
+                        if (isActivity.orElse(false)) {
+                            ServiceManager
+                                    .getService(IActivityViewService.class)
+                                    .openOrReloadActivity(psiFile);
+                        }
+                    } catch (Exception e) {
+                        ServiceManager
+                                .getService(INotificationService.class)
+                                .notify(source.getProject(), e);
+                    }
+                });
     }
 
     @Override
     public void selectionChanged(
             @NotNull FileEditorManagerEvent event) {
 
-        try {
-            if (event.getNewFile() == null) {
-                return;
-            }
+        DumbService
+                .getInstance(event.getManager().getProject())
+                .runWhenSmart(() -> {
+                    try {
+                        if (event.getNewFile() == null) {
+                            return;
+                        }
 
-            PsiFile psiFile =
-                    PsiManager
-                            .getInstance(event.getManager().getProject())
-                            .findFile(event.getNewFile());
+                        PsiFile psiFile =
+                                PsiManager
+                                        .getInstance(event.getManager().getProject())
+                                        .findFile(event.getNewFile());
 
-            Optional<Boolean> isActivity =
-                    isActivityFile(psiFile);
+                        Optional<Boolean> isActivity =
+                                isActivityFile(psiFile);
 
-            if (isActivity.orElse(false)) {
-                ServiceManager
-                        .getService(IActivityViewService.class)
-                        .openOrReloadActivity(psiFile);
-            }
-        } catch (Exception e) {
-            ServiceManager
-                    .getService(INotificationService.class)
-                    .notify(event.getManager().getProject(), e);
-        }
+                        if (isActivity.orElse(false)) {
+                            ServiceManager
+                                    .getService(IActivityViewService.class)
+                                    .openOrReloadActivity(psiFile);
+                        }
+                    } catch (Exception e) {
+                        ServiceManager
+                                .getService(INotificationService.class)
+                                .notify(event.getManager().getProject(), e);
+                    }
+                });
     }
 
     @Override
@@ -84,25 +93,29 @@ public class FileOpenListener implements FileEditorManagerListener {
             @NotNull FileEditorManager source,
             @NotNull VirtualFile file) {
 
-        try {
-            PsiFile psiFile =
-                    PsiManager
-                            .getInstance(source.getProject())
-                            .findFile(file);
+        DumbService
+                .getInstance(source.getProject())
+                .runWhenSmart(() -> {
+                    try {
+                        PsiFile psiFile =
+                                PsiManager
+                                        .getInstance(source.getProject())
+                                        .findFile(file);
 
-            Optional<Boolean> isActivity =
-                    isActivityFile(psiFile);
+                        Optional<Boolean> isActivity =
+                                isActivityFile(psiFile);
 
-            if (isActivity.orElse(false)) {
-                ServiceManager
-                        .getService(IActivityViewService.class)
-                        .closeActivity(psiFile);
-            }
-        } catch (Exception e) {
-            ServiceManager
-                    .getService(INotificationService.class)
-                    .notify(source.getProject(), e);
-        }
+                        if (isActivity.orElse(false)) {
+                            ServiceManager
+                                    .getService(IActivityViewService.class)
+                                    .closeActivity(psiFile);
+                        }
+                    } catch (Exception e) {
+                        ServiceManager
+                                .getService(INotificationService.class)
+                                .notify(source.getProject(), e);
+                    }
+                });
     }
 
     private Optional<Boolean> isActivityFile(
