@@ -51,10 +51,6 @@
                 serviceImplementation="impl.services.LifecycleNodeFactory"/>
 
         <applicationService
-                serviceInterface="interfaces.ICallbackMethodAnalyzerFactory"
-                serviceImplementation="impl.services.CallbackMethodAnalyzerFactory"/>
-
-        <applicationService
                 serviceImplementation="impl.settings.AppSettingsState"/>
 
         <applicationConfigurable

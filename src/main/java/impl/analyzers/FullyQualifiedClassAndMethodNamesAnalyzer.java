@@ -6,30 +6,36 @@ import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.util.PsiTreeUtil;
 import interfaces.ICallbackMethodAnalyzer;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.HashSet;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
-public class FullyQualifiedClassAndMethodNamesAnalyzer<T> implements ICallbackMethodAnalyzer<T> {
-    public FullyQualifiedClassAndMethodNamesAnalyzer(
-            HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, T>> methodCallsToMatch) {
-
-        this.methodCallsToMatch = methodCallsToMatch;
-    }
+public class FullyQualifiedClassAndMethodNamesAnalyzer
+        implements ICallbackMethodAnalyzer<FullyQualifiedClassAndMethodName, PsiMethodCallExpression> {
 
     @Override
-    public List<T> analyze(PsiMethod method) {
-        List<T> result = new ArrayList<>();
-        analyze(method, t -> result.add(t));
-        return result;
+    public void analyze(
+            PsiMethod method,
+            Predicate<FullyQualifiedClassAndMethodName> isPatternRecognized,
+            BiConsumer<FullyQualifiedClassAndMethodName, PsiMethodCallExpression> processPatternInstance) {
+
+        HashSet<FullyQualifiedClassAndMethodName> visitingMethods =
+                new HashSet<>();
+
+        visitingMethods.add(
+                new FullyQualifiedClassAndMethodName(
+                        method.getContainingClass().getQualifiedName(),
+                        method.getName()));
+
+        analyze(method, isPatternRecognized, processPatternInstance, visitingMethods);
     }
 
     private void analyze(
             PsiMethod method,
-            Consumer<T> processMatchedMethodCall) {
+            Predicate<FullyQualifiedClassAndMethodName> isPatternRecognized,
+            BiConsumer<FullyQualifiedClassAndMethodName, PsiMethodCallExpression> processPatternInstance,
+            HashSet<FullyQualifiedClassAndMethodName> visitingMethods) {
 
         Collection<PsiElement> methodCallExpressions =
                 PsiTreeUtil.findChildrenOfAnyType(
@@ -52,12 +58,8 @@ public class FullyQualifiedClassAndMethodNamesAnalyzer<T> implements ICallbackMe
                             resolvedMethod.getContainingClass().getQualifiedName(),
                             resolvedMethod.getName());
 
-            if (methodCallsToMatch.containsKey(classAndMethodName)) {
-                processMatchedMethodCall.accept(
-                        methodCallsToMatch
-                                .get(classAndMethodName)
-                                .apply(methodCallExpression));
-
+            if (isPatternRecognized.test(classAndMethodName)) {
+                processPatternInstance.accept(classAndMethodName, methodCallExpression);
             } else {
                 Boolean isInSameProject =
                         resolvedMethod
@@ -66,12 +68,13 @@ public class FullyQualifiedClassAndMethodNamesAnalyzer<T> implements ICallbackMe
                                 .getCanonicalPath()
                                 .startsWith(method.getProject().getBasePath());
 
-                if (isInSameProject) {
-                    analyze(resolvedMethod, processMatchedMethodCall);
+                if (isInSameProject && !visitingMethods.contains(classAndMethodName)) {
+                    visitingMethods.add(classAndMethodName);
+                    analyze(resolvedMethod, isPatternRecognized, processPatternInstance, visitingMethods);
+                    visitingMethods.remove(classAndMethodName);
                 }
             }
         }
-    }
 
-    private final HashMap<FullyQualifiedClassAndMethodName, Function<PsiMethodCallExpression, T>> methodCallsToMatch;
+    }
 }

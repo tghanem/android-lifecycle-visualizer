@@ -2,8 +2,12 @@ package interfaces;
 
 import com.intellij.psi.PsiMethod;
 
-import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
-public interface ICallbackMethodAnalyzer<T> {
-    List<T> analyze(PsiMethod method);
+public interface ICallbackMethodAnalyzer<TPattern, TInstance> {
+    void analyze(
+            PsiMethod method,
+            Predicate<TPattern> isPatternRecognized,
+            BiConsumer<TPattern, TInstance> processPatternInstance);
 }

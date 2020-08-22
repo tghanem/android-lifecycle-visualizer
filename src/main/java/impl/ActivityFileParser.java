@@ -1,24 +1,18 @@
 package impl;
 
-import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.project.IndexNotReadyException;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.*;
+import impl.analyzers.FullyQualifiedClassAndMethodName;
+import impl.analyzers.FullyQualifiedClassAndMethodNamesAnalyzer;
 import impl.model.dstl.Activity;
 import impl.model.dstl.CallbackMethod;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
+import impl.settings.AppSettingsState;
 import interfaces.IActivityFileParser;
 import interfaces.ICallbackMethodAnalyzer;
-import interfaces.ICallbackMethodAnalyzerFactory;
 import org.jetbrains.kotlin.psi.KtFile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class ActivityFileParser implements IActivityFileParser {
     private static final List<String> callbacks =
@@ -43,23 +37,43 @@ public class ActivityFileParser implements IActivityFileParser {
 
         PsiClass psiClass = classes.get()[0];
 
-        ICallbackMethodAnalyzerFactory analyzerFactory =
-                ServiceManager.getService(ICallbackMethodAnalyzerFactory.class);
+        ICallbackMethodAnalyzer<FullyQualifiedClassAndMethodName, PsiMethodCallExpression> resourceAnalyzer =
+                new FullyQualifiedClassAndMethodNamesAnalyzer();
 
-        ICallbackMethodAnalyzer<ResourceAcquisition> resourceAcquisitionAnalyzer =
-                analyzerFactory.createResourceAcquisitionAnalyzer();
+        HashMap<FullyQualifiedClassAndMethodName, String> resourceAcquisitions =
+                AppSettingsState.getInstance().parseResourceAcquisitions();
 
-        ICallbackMethodAnalyzer<ResourceRelease> resourceReleaseAnalyzer =
-                analyzerFactory.createResourceReleaseAnalyzer();
+        HashMap<FullyQualifiedClassAndMethodName, String> resourceReleases =
+                AppSettingsState.getInstance().parseResourceReleases();
 
         for (PsiMethod method : psiClass.getMethods()) {
+            List<ResourceAcquisition> acquisitions = new ArrayList<>();
+            List<ResourceRelease> releases = new ArrayList<>();
+
             if (callbacks.contains(method.getName())) {
-                handlers.add(
-                        new CallbackMethod(
-                                method,
-                                resourceAcquisitionAnalyzer.analyze(method),
-                                resourceReleaseAnalyzer.analyze(method)));
+                resourceAnalyzer.analyze(
+                        method,
+                        fullyQualifiedClassAndMethodName -> {
+                            return
+                                    resourceAcquisitions.containsKey(fullyQualifiedClassAndMethodName) ||
+                                            resourceReleases.containsKey(fullyQualifiedClassAndMethodName);
+                        },
+                        (fullyQualifiedClassAndMethodName, psiMethodCallExpression) -> {
+                            if (resourceAcquisitions.containsKey(fullyQualifiedClassAndMethodName)) {
+                                acquisitions.add(
+                                        new ResourceAcquisition(
+                                                psiMethodCallExpression,
+                                                resourceAcquisitions.get(fullyQualifiedClassAndMethodName)));
+                            } else if (resourceReleases.containsKey(fullyQualifiedClassAndMethodName)) {
+                                releases.add(
+                                        new ResourceRelease(
+                                                psiMethodCallExpression,
+                                                resourceReleases.get(fullyQualifiedClassAndMethodName)));
+                            }
+                        });
             }
+
+            handlers.add(new CallbackMethod(method, acquisitions, releases));
         }
 
         return Optional.of(new Activity(psiClass, handlers));
