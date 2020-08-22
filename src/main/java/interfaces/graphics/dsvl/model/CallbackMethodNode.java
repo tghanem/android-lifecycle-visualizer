@@ -24,14 +24,14 @@ public class CallbackMethodNode extends LifecycleNode {
         this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("handler.png")));
     }
 
-    public void setHandler(CallbackMethod value) {
+    public void setCallbackMethod(CallbackMethod value) {
         handler = Optional.of(value);
         this.setBackground(Color.YELLOW);
         revalidate();
         repaint();
     }
 
-    public Optional<CallbackMethod> getHandler() {
+    public Optional<CallbackMethod> getCallbackMethod() {
         return handler;
     }
 

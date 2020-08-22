@@ -5,6 +5,7 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
+import com.intellij.util.Producer;
 import interfaces.graphics.dsvl.model.CircularLifecycleNode;
 import interfaces.graphics.dsvl.model.CallbackMethodNode;
 import interfaces.graphics.dsvl.model.ResourceAcquisitionLifecycleNode;
@@ -43,9 +44,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                 });
 
         attachToMouseRightClick(
-                createCallbackMethodNodeMenu(
-                        ownerActivityClass,
-                        node),
+                () -> createCallbackMethodNodeMenu(ownerActivityClass, node),
                 node);
 
         return node;
@@ -60,7 +59,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                 new CircularLifecycleNode(targetCallbackMethodNode);
 
         attachToMouseRightClick(
-                createCallbackMethodNodeMenu(ownerActivityClass, targetCallbackMethodNode),
+                () -> createCallbackMethodNodeMenu(ownerActivityClass, targetCallbackMethodNode),
                 node);
 
         return node;
@@ -73,14 +72,16 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
         ResourceAcquisitionLifecycleNode resourceAcquisitionNode =
                 new ResourceAcquisitionLifecycleNode(resourceAcquisition);
 
-        HashMap<String, Runnable> menuItems = new HashMap<>();
-
-        menuItems.put(
-                "Go To Line",
-                () -> navigateTo(resourceAcquisition.getPsiElement()));
-
         attachToMouseRightClick(
-                createPopupMenu(menuItems),
+                () -> {
+                    HashMap<String, Runnable> menuItems = new HashMap<>();
+
+                    menuItems.put(
+                            "Go To Line",
+                            () -> navigateTo(resourceAcquisition.getPsiElement()));
+
+                    return createPopupMenu(menuItems);
+                },
                 resourceAcquisitionNode);
 
         return resourceAcquisitionNode;
@@ -93,14 +94,16 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
         ResourceReleaseLifecycleNode resourceReleaseNode =
                 new ResourceReleaseLifecycleNode(resourceRelease);
 
-        HashMap<String, Runnable> menuItems = new HashMap<>();
-
-        menuItems.put(
-                "Go To Line",
-                () -> navigateTo(resourceRelease.getPsiElement()));
-
         attachToMouseRightClick(
-                createPopupMenu(menuItems),
+                () -> {
+                    HashMap<String, Runnable> menuItems = new HashMap<>();
+
+                    menuItems.put(
+                            "Go To Line",
+                            () -> navigateTo(resourceRelease.getPsiElement()));
+
+                    return createPopupMenu(menuItems);
+                },
                 resourceReleaseNode);
 
         return resourceReleaseNode;
@@ -113,43 +116,46 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
         HashMap<String, Runnable> menuItems =
                 new HashMap<>();
 
-        if (node.getHandler().isPresent()) {
+        if (node.getCallbackMethod().isPresent()) {
             menuItems.put(
-                    "Go To Handler",
+                    "Go To Method",
                     () -> {
-                        navigateTo(node.getHandler().get().getPsiElement());
+                        navigateTo(node.getCallbackMethod().get().getPsiElement());
                     });
         } else {
             menuItems.put(
-                    "Add Handler",
+                    "Add Callback Method",
                     () -> {
-                        PsiMethod handlerElement =
+                        PsiMethod callbackMethodPsiElement =
                                 ServiceManager
                                         .getService(IActivityFileModifier.class)
                                         .createAndAddCallbackMethod(
                                                 activityClass,
                                                 node.getName());
 
-                        node.setHandler(
+                        node.setCallbackMethod(
                                 new CallbackMethod(
-                                        handlerElement,
+                                        callbackMethodPsiElement,
                                         new ArrayList<>(),
                                         new ArrayList<>()));
 
-                        navigateTo(handlerElement);
+                        navigateTo(callbackMethodPsiElement);
                     });
         }
 
         return createPopupMenu(menuItems);
     }
 
-    private void attachToMouseRightClick(JPopupMenu menu, JComponent component) {
+    private void attachToMouseRightClick(
+            Producer<JPopupMenu> createMenu,
+            JComponent component) {
+
         component.addMouseListener(
                 new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent mouseEvent) {
                         if (SwingUtilities.isRightMouseButton(mouseEvent)) {
-                            menu.show(
+                            createMenu.produce().show(
                                     mouseEvent.getComponent(),
                                     mouseEvent.getX(),
                                     mouseEvent.getY());
