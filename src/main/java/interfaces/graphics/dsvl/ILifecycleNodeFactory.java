@@ -17,15 +17,21 @@ public interface ILifecycleNodeFactory {
             PsiClass ownerActivityClass,
             String callbackMethodName,
             Optional<CallbackMethod> callbackMethod,
-            Consumer<CallbackMethodNode> onClick);
+            Consumer<CallbackMethodNode> onClick,
+            Consumer<CallbackMethodNode> goToNode,
+            Consumer<CallbackMethodNode> onAddCallbackMethod);
 
     CircularLifecycleNode createCircularLifecycleNode(
             PsiClass ownerActivityClass,
-            CallbackMethodNode targetCallbackMethodNode);
+            CallbackMethodNode targetCallbackMethodNode,
+            Consumer<CallbackMethodNode> goToNode,
+            Consumer<CallbackMethodNode> onAddCallbackMethod);
 
     ResourceAcquisitionLifecycleNode createResourceAcquisitionLifecycleNode(
-            ResourceAcquisition resourceAcquisition);
+            ResourceAcquisition resourceAcquisition,
+            Consumer<ResourceAcquisitionLifecycleNode> goToResource);
 
     ResourceReleaseLifecycleNode createResourceReleaseLifecycleNode(
-            ResourceRelease resourceRelease);
+            ResourceRelease resourceRelease,
+            Consumer<ResourceReleaseLifecycleNode> goToResource);
 }
