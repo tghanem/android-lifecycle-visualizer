@@ -113,15 +113,12 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
             PsiClass activityClass,
             CallbackMethodNode node) {
 
-        HashMap<String, Runnable> menuItems =
-                new HashMap<>();
+        HashMap<String, Runnable> menuItems = new HashMap<>();
 
         if (node.getCallbackMethod().isPresent()) {
             menuItems.put(
                     "Go To Method",
-                    () -> {
-                        navigateTo(node.getCallbackMethod().get().getPsiElement());
-                    });
+                    () -> navigateTo(node.getCallbackMethod().get().getPsiElement()));
         } else {
             menuItems.put(
                     "Add Callback Method",

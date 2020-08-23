@@ -5,21 +5,32 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
-import com.intellij.ui.content.*;
+import com.intellij.ui.content.Content;
+import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.content.ContentManagerAdapter;
+import com.intellij.ui.content.ContentManagerEvent;
 import impl.model.dstl.Activity;
+import impl.model.dstl.CallbackMethod;
+import impl.model.dstl.ResourceAcquisition;
+import impl.model.dstl.ResourceRelease;
 import interfaces.IActivityFileProcessor;
 import interfaces.INotificationService;
 import interfaces.graphics.dsvl.IActivityViewService;
-import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
+import interfaces.graphics.dsvl.ILifecycleNodeFactory;
+import interfaces.graphics.dsvl.model.CallbackMethodNode;
+import interfaces.graphics.dsvl.model.LifecycleNode;
 import interfaces.graphics.dsvl.model.LifecyclePanel;
 import org.apache.commons.codec.binary.Hex;
 import org.jetbrains.annotations.NotNull;
 
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class ActivityViewService implements IActivityViewService {
     private Optional<ToolWindow> activityViewHolder;
@@ -210,10 +221,39 @@ public class ActivityViewService implements IActivityViewService {
 
         LifecyclePanel panel = new LifecyclePanel();
 
-        panel.display(
-                new ActivityMetadataToRender(
+        HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap =
+                new HashMap<>();
+
+        CallbackMethodNode graphRoot =
+                buildLifecycleGraph(
                         activity.get().getPsiElement(),
-                        activity.get().getCallbackMethods()));
+                        activity.get().getCallbackMethods(),
+                        subtreeVisibleHashMap,
+                        node -> {
+                            if (node instanceof CallbackMethodNode) {
+                                CallbackMethodNode callbackMethodNode =
+                                        (CallbackMethodNode) node;
+
+                                Boolean subtreeVisible =
+                                        subtreeVisibleHashMap.get(node);
+
+                                if (!subtreeVisible) {
+                                    for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
+                                        nextNode.setVisible(true);
+                                    }
+                                    subtreeVisibleHashMap.replace(node, true);
+                                } else {
+                                    for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
+                                        setNodeVisibility(nextNode, subtreeVisibleHashMap, false);
+                                    }
+                                    subtreeVisibleHashMap.replace(node, false);
+                                }
+                            }
+                            panel.revalidate();
+                            panel.repaint();
+                        });
+
+        panel.display(graphRoot);
 
         Content activityContent =
                 ContentFactory
@@ -232,7 +272,9 @@ public class ActivityViewService implements IActivityViewService {
                         activity.get(),
                         panel,
                         activityContent,
-                        calculatePsiFileDigest(activityFile));
+                        calculatePsiFileDigest(activityFile),
+                        graphRoot,
+                        subtreeVisibleHashMap);
 
         return Optional.of(contents);
     }
@@ -249,22 +291,199 @@ public class ActivityViewService implements IActivityViewService {
         return Hex.encodeHexString(digest.digest());
     }
 
+    private CallbackMethodNode buildLifecycleGraph(
+            PsiClass activityClass,
+            List<CallbackMethod> callbackMethods,
+            HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap,
+            Consumer<LifecycleNode> repaint) {
+
+        ILifecycleNodeFactory lifecycleNodeFactory =
+                ServiceManager.getService(ILifecycleNodeFactory.class);
+
+        CallbackMethodNode onCreate =
+                buildLifecycleHandlerNode(
+                        activityClass,
+                        "onCreate",
+                        callbackMethods,
+                        repaint);
+
+        onCreate.setVisible(true);
+
+        CallbackMethodNode onStart =
+                buildLifecycleHandlerNode(
+                        activityClass,
+                        "onStart",
+                        callbackMethods,
+                        repaint);
+
+        onCreate.addNextNode(0, onStart);
+
+        CallbackMethodNode onResume =
+                buildLifecycleHandlerNode(
+                        activityClass,
+                        "onResume",
+                        callbackMethods,
+                        repaint);
+
+        onStart.addNextNode(0, onResume);
+
+        CallbackMethodNode onPause =
+                buildLifecycleHandlerNode(
+                        activityClass,
+                        "onPause",
+                        callbackMethods,
+                        repaint);
+
+        onResume.addNextNode(0, onPause);
+
+        CallbackMethodNode onStop =
+                buildLifecycleHandlerNode(
+                        activityClass,
+                        "onStop",
+                        callbackMethods,
+                        repaint);
+
+        onPause.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleNode(
+                        activityClass,
+                        onResume));
+
+        onPause.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleNode(
+                        activityClass,
+                        onCreate));
+
+        onPause.addNextNode(0, onStop);
+
+        CallbackMethodNode onRestart =
+                buildLifecycleHandlerNode(
+                        activityClass,
+                        "onRestart",
+                        callbackMethods,
+                        repaint);
+
+        onRestart.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleNode(
+                        activityClass,
+                        onStart));
+
+        CallbackMethodNode onDestroy =
+                buildLifecycleHandlerNode(
+                        activityClass,
+                        "onDestroy",
+                        callbackMethods,
+                        repaint);
+
+        onStop.addNextNode(0, onRestart);
+        onStop.addNextNode(0, onDestroy);
+
+        onStop.addNextNode(
+                0,
+                lifecycleNodeFactory.createCircularLifecycleNode(
+                        activityClass,
+                        onCreate));
+
+        subtreeVisibleHashMap.put(onCreate, false);
+        subtreeVisibleHashMap.put(onStart, false);
+        subtreeVisibleHashMap.put(onResume, false);
+        subtreeVisibleHashMap.put(onPause, false);
+        subtreeVisibleHashMap.put(onStop, false);
+        subtreeVisibleHashMap.put(onRestart, false);
+        subtreeVisibleHashMap.put(onDestroy, false);
+
+        return onCreate;
+    }
+
+    private CallbackMethodNode buildLifecycleHandlerNode(
+            PsiClass activityClass,
+            String callbackMethodName,
+            List<CallbackMethod> callbackMethods,
+            Consumer<LifecycleNode> repaint) {
+
+        ILifecycleNodeFactory lifecycleNodeFactory =
+                ServiceManager.getService(ILifecycleNodeFactory.class);
+
+        Optional<CallbackMethod> handler =
+                findByName(callbackMethods, callbackMethodName);
+
+        CallbackMethodNode node =
+                lifecycleNodeFactory.createCallbackMethodNode(
+                        activityClass,
+                        callbackMethodName,
+                        handler,
+                        callbackMethodNode -> repaint.accept(callbackMethodNode));
+
+        if (handler.isPresent()) {
+            for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
+                node.addNextNode(
+                        lifecycleNodeFactory
+                                .createResourceAcquisitionLifecycleNode(resourceAcquisition));
+            }
+
+            for (ResourceRelease resourceRelease : handler.get().getResourceReleases()) {
+                node.addNextNode(
+                        lifecycleNodeFactory
+                                .createResourceReleaseLifecycleNode(resourceRelease));
+            }
+        }
+
+        return node;
+    }
+
+    private Optional<CallbackMethod> findByName(
+            List<CallbackMethod> handlers,
+            String handlerName) {
+
+        for (CallbackMethod handler : handlers) {
+            if (handler.getPsiElement().getName().equals(handlerName)) {
+                return Optional.of(handler);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private void setNodeVisibility(
+            LifecycleNode node,
+            HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap,
+            boolean visibility) {
+
+        if (node instanceof CallbackMethodNode) {
+            CallbackMethodNode callbackMethodNode = (CallbackMethodNode) node;
+            for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
+                setNodeVisibility(nextNode, subtreeVisibleHashMap, visibility);
+            }
+            subtreeVisibleHashMap.replace(node, false);
+        }
+
+        node.setVisible(visibility);
+    }
+
     class ActivityViewContents {
         ActivityViewContents(
                 Activity activity,
                 LifecyclePanel panel,
                 Content content,
-                String activityFileDigest) {
+                String activityFileDigest,
+                CallbackMethodNode graphRoot,
+                HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap) {
 
             this.activity = activity;
             this.panel = panel;
             this.content = content;
             this.activityFileDigest = activityFileDigest;
+            this.graphRoot = graphRoot;
+            this.subtreeVisibleHashMap = subtreeVisibleHashMap;
         }
 
         private final Activity activity;
         private final LifecyclePanel panel;
         private final Content content;
         private final String activityFileDigest;
+        private final CallbackMethodNode graphRoot;
+        private final HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap;
     }
 }

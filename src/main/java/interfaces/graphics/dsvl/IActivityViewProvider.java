@@ -1,7 +1,7 @@
 package interfaces.graphics.dsvl;
 
-import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
+import interfaces.graphics.dsvl.model.CallbackMethodNode;
 
 public interface IActivityViewProvider {
-    void display(ActivityMetadataToRender metadata);
+    void display(CallbackMethodNode graphRoot);
 }

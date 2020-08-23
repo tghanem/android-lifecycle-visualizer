@@ -1,84 +1,25 @@
 package interfaces.graphics.dsvl.model;
 
-import com.intellij.openapi.components.ServiceManager;
-import impl.model.dstl.CallbackMethod;
-import impl.model.dstl.ResourceAcquisition;
-import impl.model.dstl.ResourceRelease;
 import interfaces.graphics.dsvl.IActivityViewProvider;
-import interfaces.graphics.dsvl.ILifecycleNodeFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Path2D;
 import java.util.List;
 import java.util.*;
-import java.util.function.Consumer;
 
 public class LifecyclePanel extends JPanel implements IActivityViewProvider {
     public LifecyclePanel() {
         graphRoot = Optional.empty();
-        subtreeVisibleHashMap = new HashMap<>();
     }
 
     @Override
-    public void display(ActivityMetadataToRender metadata) {
-        subtreeVisibleHashMap.clear();
-
-        CallbackMethodNode root =
-                buildLifecycleGraph(
-                        metadata,
-                        node -> {
-                            processNodeClicked(node);
-                            revalidate();
-                            repaint();
-                        });
-
-        graphRoot = Optional.of(root);
-    }
-
-    private void processNodeClicked(
-            LifecycleNode node) {
-
-        if (node instanceof CallbackMethodNode) {
-            CallbackMethodNode callbackMethodNode =
-                    (CallbackMethodNode) node;
-
-            Boolean subtreeVisible =
-                    subtreeVisibleHashMap.get(node);
-
-            if (!subtreeVisible) {
-                for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
-                    nextNode.setVisible(true);
-                }
-                subtreeVisibleHashMap.replace(node, true);
-            } else {
-                for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
-                    setNodeVisibility(nextNode, false);
-                }
-                subtreeVisibleHashMap.replace(node, false);
-            }
-        }
-    }
-
-    private void setNodeVisibility(
-            LifecycleNode node,
-            boolean visibility) {
-
-        if (node instanceof CallbackMethodNode) {
-            CallbackMethodNode callbackMethodNode = (CallbackMethodNode) node;
-            for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
-                setNodeVisibility(nextNode, visibility);
-            }
-            subtreeVisibleHashMap.replace(node, false);
-        }
-
-        node.setVisible(visibility);
+    public void display(CallbackMethodNode graphRoot) {
+        this.graphRoot = Optional.of(graphRoot);
     }
 
     @Override
-    protected void paintComponent(
-            Graphics graphics) {
-
+    protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
 
         if (!graphRoot.isPresent()) {
@@ -165,11 +106,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
         }
     }
 
-    private void drawNonCircularLine(
-            Graphics2D graphics,
-            Rectangle source,
-            Rectangle target) {
-
+    private void drawNonCircularLine(Graphics2D graphics, Rectangle source, Rectangle target) {
         Path2D path = new Path2D.Double();
         path.moveTo(source.x + source.width / 2.0, source.y);
         path.lineTo(target.x + target.width / 2.0, target.y);
@@ -178,153 +115,5 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
         graphics.draw(path);
     }
 
-    private CallbackMethodNode buildLifecycleGraph(
-            ActivityMetadataToRender metadata,
-            Consumer<LifecycleNode> repaint) {
-
-        ILifecycleNodeFactory lifecycleNodeFactory =
-                ServiceManager.getService(ILifecycleNodeFactory.class);
-
-        CallbackMethodNode onCreate =
-                buildLifecycleHandlerNode(
-                        lifecycleNodeFactory,
-                        metadata,
-                        "onCreate",
-                        repaint);
-
-        onCreate.setVisible(true);
-
-        CallbackMethodNode onStart =
-                buildLifecycleHandlerNode(
-                        lifecycleNodeFactory,
-                        metadata,
-                        "onStart",
-                        repaint);
-
-        onCreate.addNextNode(0, onStart);
-
-        CallbackMethodNode onResume =
-                buildLifecycleHandlerNode(
-                        lifecycleNodeFactory,
-                        metadata,
-                        "onResume",
-                        repaint);
-
-        onStart.addNextNode(0, onResume);
-
-        CallbackMethodNode onPause =
-                buildLifecycleHandlerNode(
-                        lifecycleNodeFactory,
-                        metadata,
-                        "onPause",
-                        repaint);
-
-        onResume.addNextNode(0, onPause);
-
-        CallbackMethodNode onStop =
-                buildLifecycleHandlerNode(
-                        lifecycleNodeFactory,
-                        metadata,
-                        "onStop",
-                        repaint);
-
-        onPause.addNextNode(
-                0,
-                lifecycleNodeFactory.createCircularLifecycleNode(
-                        metadata.getActivityClass(),
-                        onResume));
-
-        onPause.addNextNode(
-                0,
-                lifecycleNodeFactory.createCircularLifecycleNode(
-                        metadata.getActivityClass(),
-                        onCreate));
-
-        onPause.addNextNode(0, onStop);
-
-        CallbackMethodNode onRestart =
-                buildLifecycleHandlerNode(
-                        lifecycleNodeFactory,
-                        metadata,
-                        "onRestart",
-                        repaint);
-
-        onRestart.addNextNode(
-                0,
-                lifecycleNodeFactory.createCircularLifecycleNode(
-                        metadata.getActivityClass(),
-                        onStart));
-
-        CallbackMethodNode onDestroy =
-                buildLifecycleHandlerNode(
-                        lifecycleNodeFactory,
-                        metadata,
-                        "onDestroy",
-                        repaint);
-
-        onStop.addNextNode(0, onRestart);
-        onStop.addNextNode(0, onDestroy);
-
-        onStop.addNextNode(
-                0,
-                lifecycleNodeFactory.createCircularLifecycleNode(
-                        metadata.getActivityClass(),
-                        onCreate));
-
-        subtreeVisibleHashMap.put(onCreate, false);
-        subtreeVisibleHashMap.put(onStart, false);
-        subtreeVisibleHashMap.put(onResume, false);
-        subtreeVisibleHashMap.put(onPause, false);
-        subtreeVisibleHashMap.put(onStop, false);
-        subtreeVisibleHashMap.put(onRestart, false);
-        subtreeVisibleHashMap.put(onDestroy, false);
-
-        return onCreate;
-    }
-
-    private Optional<CallbackMethod> findByName(
-            List<CallbackMethod> handlers,
-            String handlerName) {
-
-        for (CallbackMethod handler : handlers) {
-            if (handler.getPsiElement().getName().equals(handlerName)) {
-                return Optional.of(handler);
-            }
-        }
-        return Optional.empty();
-    }
-
-    private CallbackMethodNode buildLifecycleHandlerNode(
-            ILifecycleNodeFactory lifecycleNodeFactory,
-            ActivityMetadataToRender metadata,
-            String handlerName,
-            Consumer<LifecycleNode> repaint) {
-
-        Optional<CallbackMethod> handler =
-                findByName(metadata.getCallbackMethods(), handlerName);
-
-        CallbackMethodNode node =
-                lifecycleNodeFactory.createCallbackMethodNode(
-                        metadata.getActivityClass(),
-                        handlerName,
-                        handler,
-                        callbackMethodNode -> repaint.accept(callbackMethodNode));
-
-        if (handler.isPresent()) {
-            for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
-                node.addNextNode(
-                        lifecycleNodeFactory.createResourceAcquisitionLifecycleNode(resourceAcquisition));
-            }
-
-            for (ResourceRelease resourceRelease : handler.get().getResourceReleases()) {
-                node.addNextNode(
-                        lifecycleNodeFactory.createResourceReleaseLifecycleNode(resourceRelease));
-            }
-        }
-
-        return node;
-    }
-
     private Optional<CallbackMethodNode> graphRoot;
-    private HashMap<LifecycleNode, Boolean> subtreeVisibleHashMap;
 }
