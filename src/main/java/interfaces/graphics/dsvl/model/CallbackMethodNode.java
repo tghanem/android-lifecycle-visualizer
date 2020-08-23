@@ -1,38 +1,27 @@
 package interfaces.graphics.dsvl.model;
 
-import impl.model.dstl.CallbackMethod;
 import interfaces.consumers.LifecycleNodeConsumer;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.Consumer;
 
 public class CallbackMethodNode extends LifecycleNode {
-    public CallbackMethodNode(Optional<CallbackMethod> handler, String name) {
+    public CallbackMethodNode(Consumer<CallbackMethodNode> paintNode, String name) {
         super(name);
+        this.paintNode = paintNode;
 
-        this.handler = handler;
         this.nextNodes = new ArrayList<>();
-
-        if (handler.isPresent()) {
-            this.setBackground(Color.YELLOW);
-        }
-
         this.setVisible(false);
         this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("handler.png")));
     }
 
-    public void setCallbackMethod(CallbackMethod value) {
-        handler = Optional.of(value);
-        this.setBackground(Color.YELLOW);
-        revalidate();
-        repaint();
-    }
-
-    public Optional<CallbackMethod> getCallbackMethod() {
-        return handler;
+    @Override
+    protected void paintComponent(Graphics graphics) {
+        paintNode.accept(this);
+        super.paintComponent(graphics);
     }
 
     public List<LifecycleNode> getNextNodes() {
@@ -68,5 +57,5 @@ public class CallbackMethodNode extends LifecycleNode {
     }
 
     private final List<LifecycleNode> nextNodes;
-    private Optional<CallbackMethod> handler;
+    private final Consumer<CallbackMethodNode> paintNode;
 }

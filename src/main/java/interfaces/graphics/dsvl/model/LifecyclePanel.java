@@ -14,7 +14,7 @@ public class LifecyclePanel extends JPanel implements IActivityViewProvider {
     }
 
     @Override
-    public void display(CallbackMethodNode graphRoot) {
+    public void setGraphRoot(CallbackMethodNode graphRoot) {
         this.graphRoot = Optional.of(graphRoot);
     }
 

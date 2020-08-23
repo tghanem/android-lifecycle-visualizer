@@ -11,12 +11,15 @@ import impl.model.dstl.ResourceRelease;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public interface ILifecycleNodeFactory {
     CallbackMethodNode createCallbackMethodNode(
             PsiClass ownerActivityClass,
             String callbackMethodName,
             Optional<CallbackMethod> callbackMethod,
+            Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
+            Consumer<CallbackMethodNode> paintNode,
             Consumer<CallbackMethodNode> onClick,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod);
@@ -24,6 +27,7 @@ public interface ILifecycleNodeFactory {
     CircularLifecycleNode createCircularLifecycleNode(
             PsiClass ownerActivityClass,
             CallbackMethodNode targetCallbackMethodNode,
+            Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod);
 

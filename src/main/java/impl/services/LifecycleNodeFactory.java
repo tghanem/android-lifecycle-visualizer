@@ -17,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class LifecycleNodeFactory implements ILifecycleNodeFactory {
     @Override
@@ -24,11 +25,13 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
             PsiClass ownerActivityClass,
             String callbackMethodName,
             Optional<CallbackMethod> callbackMethod,
+            Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
+            Consumer<CallbackMethodNode> paintNode,
             Consumer<CallbackMethodNode> onClick,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod) {
 
-        CallbackMethodNode node = new CallbackMethodNode(callbackMethod, callbackMethodName);
+        CallbackMethodNode node = new CallbackMethodNode(paintNode, callbackMethodName);
 
         node.addActionListener(
                 new ActionListener() {
@@ -39,7 +42,12 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
                 });
 
         attachToMouseRightClick(
-                () -> createCallbackMethodNodeMenu(node, goToNode, onAddCallbackMethod),
+                () ->
+                        createCallbackMethodNodeMenu(
+                                node,
+                                nodeHasUnderlyingCallbackMethod,
+                                goToNode,
+                                onAddCallbackMethod),
                 node);
 
         return node;
@@ -49,13 +57,19 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
     public CircularLifecycleNode createCircularLifecycleNode(
             PsiClass ownerActivityClass,
             CallbackMethodNode targetCallbackMethodNode,
+            Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod) {
 
         CircularLifecycleNode node = new CircularLifecycleNode(targetCallbackMethodNode);
 
         attachToMouseRightClick(
-                () -> createCallbackMethodNodeMenu(targetCallbackMethodNode, goToNode, onAddCallbackMethod),
+                () ->
+                        createCallbackMethodNodeMenu(
+                                targetCallbackMethodNode,
+                                nodeHasUnderlyingCallbackMethod,
+                                goToNode,
+                                onAddCallbackMethod),
                 node);
 
         return node;
@@ -101,12 +115,13 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
 
     private JPopupMenu createCallbackMethodNodeMenu(
             CallbackMethodNode node,
+            Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod) {
 
         HashMap<String, Runnable> menuItems = new HashMap<>();
 
-        if (node.getCallbackMethod().isPresent()) {
+        if (nodeHasUnderlyingCallbackMethod.apply(node)) {
             menuItems.put("Go To Method", () -> goToNode.accept(node));
         } else {
             menuItems.put("Add Callback Method", () -> onAddCallbackMethod.accept(node));
