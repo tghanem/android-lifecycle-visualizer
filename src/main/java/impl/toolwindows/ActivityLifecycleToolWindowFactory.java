@@ -1,6 +1,7 @@
 package impl.toolwindows;
 
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
@@ -18,6 +19,12 @@ public class ActivityLifecycleToolWindowFactory implements ToolWindowFactory {
         ServiceManager
                 .getService(IActivityViewService.class)
                 .setActivityViewHolder(project, toolWindow);
+
+        for (FileEditor editor : FileEditorManager.getInstance(project).getAllEditors()) {
+            ServiceManager
+                    .getService(IFileEditorManagerEventHandler.class)
+                    .processFileOpenedOrSelected(editor.getFile(), project);
+        }
 
         project
                 .getMessageBus()
