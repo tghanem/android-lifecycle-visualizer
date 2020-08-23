@@ -1,10 +1,22 @@
 plugins {
-    id 'java'
     id 'org.jetbrains.intellij' version '0.4.21'
 }
 
+apply plugin: 'org.jetbrains.intellij'
+apply plugin: 'java'
+
+intellij {
+    plugins 'java'
+    pluginName 'Activity Lifecycle Visualizer'
+
+    version '2020.2'
+
+    updateSinceUntilBuild false
+    sameSinceUntilBuild false
+}
+
 group 'org.birzeit.swen'
-version '1.1'
+version '1.0'
 
 repositories {
     mavenCentral()
@@ -14,12 +26,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
-// See https://github.com/JetBrains/gradle-intellij-plugin/
-intellij {
-    version '2020.2'
-    plugins 'java', 'org.jetbrains.kotlin'
-}
-
-patchPluginXml {
-    changeNotes """Initial release of the plugin for testing purposes."""
+runIde {
+    ideDirectory 'C:/Program Files/Android/Android Studio'
 }

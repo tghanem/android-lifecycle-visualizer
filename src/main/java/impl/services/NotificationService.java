@@ -22,7 +22,21 @@ public class NotificationService implements INotificationService {
     }
 
     @Override
-    public void notify(Project project, Exception exception) {
+    public void notifyInfo(Project project, String message) {
+        notificationGroup
+                .createNotification(message, NotificationType.INFORMATION)
+                .notify(project);
+    }
+
+    @Override
+    public void notifyWarning(Project project, String message) {
+        notificationGroup
+                .createNotification(message, NotificationType.WARNING)
+                .notify(project);
+    }
+
+    @Override
+    public void notifyError(Project project, Exception exception) {
         notificationGroup
                 .createNotification(getExceptionInformation(exception), NotificationType.ERROR)
                 .notify(project);

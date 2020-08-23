@@ -10,7 +10,6 @@ import impl.model.dstl.ResourceRelease;
 import impl.settings.AppSettingsState;
 import interfaces.IActivityFileParser;
 import interfaces.ICallbackMethodAnalyzer;
-import org.jetbrains.kotlin.psi.KtFile;
 
 import java.util.*;
 
@@ -83,9 +82,6 @@ public class ActivityFileParser implements IActivityFileParser {
         if (file instanceof PsiJavaFile) {
             PsiJavaFile javaFile = (PsiJavaFile) file;
             return Optional.of(javaFile.getClasses());
-        } else if (file instanceof KtFile) {
-            KtFile kotlinFile = (KtFile) file;
-            return Optional.of(kotlinFile.getClasses());
         } else {
             return Optional.empty();
         }

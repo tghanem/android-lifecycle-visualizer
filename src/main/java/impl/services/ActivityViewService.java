@@ -6,12 +6,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.psi.PsiFile;
-import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentFactory;
-import com.intellij.ui.content.ContentManagerEvent;
-import com.intellij.ui.content.ContentManagerListener;
+import com.intellij.ui.content.*;
 import impl.model.dstl.Activity;
 import interfaces.IActivityFileProcessor;
+import interfaces.INotificationService;
 import interfaces.graphics.dsvl.IActivityViewService;
 import interfaces.graphics.dsvl.model.ActivityMetadataToRender;
 import interfaces.graphics.dsvl.model.LifecyclePanel;
@@ -43,23 +41,25 @@ public class ActivityViewService implements IActivityViewService {
                     .addContent(activity.content);
         }
 
-        toolWindow.addContentManagerListener(
-                new ContentManagerListener() {
-                    @Override
-                    public void selectionChanged(@NotNull ContentManagerEvent event) {
-                        if (event.getOperation() == ContentManagerEvent.ContentOperation.add) {
-                            new OpenFileDescriptor(
-                                    project,
-                                    activities
-                                            .get(event.getIndex())
-                                            .activity
-                                            .getPsiElement()
-                                            .getContainingFile()
-                                            .getVirtualFile())
-                            .navigateInEditor(project, true);
-                        }
-                    }
-                });
+        toolWindow
+                .getContentManager()
+                .addContentManagerListener(
+                        new ContentManagerAdapter() {
+                            @Override
+                            public void selectionChanged(@NotNull ContentManagerEvent event) {
+                                if (event.getOperation() == ContentManagerEvent.ContentOperation.add) {
+                                    new OpenFileDescriptor(
+                                            project,
+                                            activities
+                                                    .get(event.getIndex())
+                                                    .activity
+                                                    .getPsiElement()
+                                                    .getContainingFile()
+                                                    .getVirtualFile())
+                                            .navigateInEditor(project, true);
+                                }
+                            }
+                        });
 
         activityViewHolder = Optional.of(toolWindow);
     }
@@ -111,7 +111,7 @@ public class ActivityViewService implements IActivityViewService {
         Optional<Integer> contentsIndex =
                 getActivityViewContents(activityFile);
 
-        if (contentsIndex.isEmpty()) {
+        if (!contentsIndex.isPresent()) {
             return;
         }
 
@@ -157,13 +157,17 @@ public class ActivityViewService implements IActivityViewService {
             PsiFile activityFile,
             Optional<Integer> index) throws Exception {
 
-        ActivityViewContents newContents =
+        Optional<ActivityViewContents> newContents =
                 createActivityViewContents(activityFile);
 
+        if (!newContents.isPresent()) {
+            return;
+        }
+
         if (index.isPresent()) {
-            activities.add(index.get(), newContents);
+            activities.add(index.get(), newContents.get());
         } else {
-            activities.add(newContents);
+            activities.add(newContents.get());
         }
 
         if (activityViewHolder.isPresent()) {
@@ -171,22 +175,22 @@ public class ActivityViewService implements IActivityViewService {
                 activityViewHolder
                         .get()
                         .getContentManager()
-                        .addContent(newContents.content, index.get());
+                        .addContent(newContents.get().content, index.get());
             } else {
                 activityViewHolder
                         .get()
                         .getContentManager()
-                        .addContent(newContents.content);
+                        .addContent(newContents.get().content);
             }
 
             activityViewHolder
                     .get()
                     .getContentManager()
-                    .setSelectedContent(newContents.content, true);
+                    .setSelectedContent(newContents.get().content, true);
         }
     }
 
-    private ActivityViewContents createActivityViewContents(
+    private Optional<ActivityViewContents> createActivityViewContents(
             PsiFile activityFile) throws Exception {
 
         Optional<Activity> activity =
@@ -194,8 +198,17 @@ public class ActivityViewService implements IActivityViewService {
                         .getService(IActivityFileProcessor.class)
                         .process(activityFile);
 
-        LifecyclePanel panel =
-                new LifecyclePanel();
+        if (!activity.isPresent()) {
+            ServiceManager
+                    .getService(INotificationService.class)
+                    .notifyError(
+                            activityFile.getProject(),
+                            new Exception("Expected to file Activity class in file " + activityFile.getName()));
+
+            return Optional.empty();
+        }
+
+        LifecyclePanel panel = new LifecyclePanel();
 
         panel.display(
                 new ActivityMetadataToRender(
@@ -214,12 +227,14 @@ public class ActivityViewService implements IActivityViewService {
                                         .getName(),
                                 false);
 
-        return
+        ActivityViewContents contents =
                 new ActivityViewContents(
                         activity.get(),
                         panel,
                         activityContent,
                         calculatePsiFileDigest(activityFile));
+
+        return Optional.of(contents);
     }
 
     private String calculatePsiFileDigest(

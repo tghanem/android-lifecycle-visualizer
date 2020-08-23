@@ -1,10 +1,9 @@
 <idea-plugin>
     <id>org.birzeit.swen.AndroidLifecycleAnalyzer</id>
-    <version>1.1.0</version>
-    <name>Android Lifecycle Visualizer</name>
+    <version>1.0.0</version>
+    <name>Activity Lifecycle Visualizer</name>
     <vendor email="timothy.ghanim@gmail.com" url="http://www.birzeit.edu">Birzeit University</vendor>
 
-    <depends>org.jetbrains.kotlin</depends>
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.platform</depends>
 
@@ -17,11 +16,6 @@
         Initial release of the plugin for testing purposes.
     </change-notes>
 
-    <applicationListeners>
-        <listener class="impl.listeners.FileOpenListener"
-                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
-    </applicationListeners>
-
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow
                 anchor="bottom"
@@ -29,6 +23,10 @@
                 icon="/tool_window_icon.png"
                 id="Activity Navigator"
                 secondary="true"/>
+
+        <applicationService
+                serviceInterface="interfaces.IFileEditorManagerEventHandler"
+                serviceImplementation="impl.services.FileEditorManagerEventHandler"/>
 
         <applicationService
                 serviceInterface="interfaces.IActivityFileProcessor"
