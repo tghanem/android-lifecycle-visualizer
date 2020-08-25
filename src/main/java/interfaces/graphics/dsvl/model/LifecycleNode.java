@@ -1,15 +1,22 @@
 package interfaces.graphics.dsvl.model;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public abstract class LifecycleNode extends JButton {
-    public LifecycleNode(String name) {
+    public LifecycleNode(Consumer<LifecycleNode> paintNode, String name) {
         super(name);
 
+        this.paintNode = paintNode;
         this.name = name;
-        this.setToolTipText(name);
-        this.setVisible(false);
+    }
+
+    @Override
+    protected void paintComponent(Graphics graphics) {
+        paintNode.accept(this);
+        super.paintComponent(graphics);
     }
 
     public String getName() {
@@ -40,4 +47,5 @@ public abstract class LifecycleNode extends JButton {
     }
 
     protected final String name;
+    private final Consumer<LifecycleNode> paintNode;
 }

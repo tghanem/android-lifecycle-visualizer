@@ -27,6 +27,7 @@ import interfaces.graphics.dsvl.model.*;
 import org.apache.commons.codec.binary.Hex;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.awt.*;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -83,6 +84,21 @@ public class ActivityViewService implements IActivityViewService {
     public void openOrReloadActivity(
             PsiFile activityFile) throws Exception {
 
+        Optional<Activity> activity =
+                ServiceManager
+                        .getService(IActivityFileProcessor.class)
+                        .process(activityFile);
+
+        if (!activity.isPresent()) {
+            ServiceManager
+                    .getService(INotificationService.class)
+                    .notifyError(
+                            activityFile.getProject(),
+                            new Exception("Expected to file Activity class in file " + activityFile.getName()));
+
+            return;
+        }
+
         Optional<Integer> contentsIndex =
                 getActivityViewContents(activityFile);
 
@@ -108,14 +124,18 @@ public class ActivityViewService implements IActivityViewService {
                             .removeContent(contents.content, true);
 
                     createAndAddNewActivityViewContents(
-                            activityFile,
-                            contentsIndex);
+                            activity.get(),
+                            contentsIndex,
+                            getSubtreeVisibility(Optional.of(contents.subtreeVisibility)),
+                            getUnderlyingCallbackMethods(activity.get().getCallbackMethods()));
                 }
             }
         } else {
             createAndAddNewActivityViewContents(
-                    activityFile,
-                    Optional.empty());
+                    activity.get(),
+                    Optional.empty(),
+                    getSubtreeVisibility(Optional.empty()),
+                    getUnderlyingCallbackMethods(activity.get().getCallbackMethods()));
         }
     }
 
@@ -169,20 +189,18 @@ public class ActivityViewService implements IActivityViewService {
     }
 
     private void createAndAddNewActivityViewContents(
-            PsiFile activityFile,
-            Optional<Integer> index) throws Exception {
+            Activity activity,
+            Optional<Integer> index,
+            HashMap<String, Boolean> subtreeVisibility,
+            HashMap<String, Optional<CallbackMethod>> underlyingCallbackMethods) throws Exception {
 
-        Optional<ActivityViewContents> newContents =
-                createActivityViewContents(activityFile);
-
-        if (!newContents.isPresent()) {
-            return;
-        }
+        ActivityViewContents newContents =
+                createActivityViewContents(activity, subtreeVisibility, underlyingCallbackMethods);
 
         if (index.isPresent()) {
-            activities.add(index.get(), newContents.get());
+            activities.add(index.get(), newContents);
         } else {
-            activities.add(newContents.get());
+            activities.add(newContents);
         }
 
         if (activityViewHolder.isPresent()) {
@@ -190,79 +208,58 @@ public class ActivityViewService implements IActivityViewService {
                 activityViewHolder
                         .get()
                         .getContentManager()
-                        .addContent(newContents.get().content, index.get());
+                        .addContent(newContents.content, index.get());
             } else {
                 activityViewHolder
                         .get()
                         .getContentManager()
-                        .addContent(newContents.get().content);
+                        .addContent(newContents.content);
             }
 
             activityViewHolder
                     .get()
                     .getContentManager()
-                    .setSelectedContent(newContents.get().content, true);
+                    .setSelectedContent(newContents.content, true);
         }
     }
 
-    private Optional<ActivityViewContents> createActivityViewContents(
-            PsiFile activityFile) throws Exception {
-
-        Optional<Activity> activity =
-                ServiceManager
-                        .getService(IActivityFileProcessor.class)
-                        .process(activityFile);
-
-        if (!activity.isPresent()) {
-            ServiceManager
-                    .getService(INotificationService.class)
-                    .notifyError(
-                            activityFile.getProject(),
-                            new Exception("Expected to file Activity class in file " + activityFile.getName()));
-
-            return Optional.empty();
-        }
+    private ActivityViewContents createActivityViewContents(
+            Activity activity,
+            HashMap<String, Boolean> subtreeVisibility,
+            HashMap<String, Optional<CallbackMethod>> underlyingCallbackMethods) throws Exception {
 
         LifecyclePanel panel = new LifecyclePanel();
 
-        HashMap<String, LifecycleNodeMetadata> metadata = new HashMap<>();
-
         CallbackMethodNode graphRoot =
                 buildLifecycleGraph(
-                        activity.get().getPsiElement(),
-                        activity.get().getCallbackMethods(),
-                        metadata,
-                        node -> metadata.get(node.getName()).getCallbackMethod().isPresent(),
-                        node -> {
-                            if (metadata.get(node.getName()).getCallbackMethod().isPresent()) {
-                                node.setBackground(Color.YELLOW);
-                            } else {
-                                node.setBackground(null);
-                            }
-                        },
+                        activity.getPsiElement(),
+                        activity.getCallbackMethods(),
+                        node -> underlyingCallbackMethods.get(node.getName()).isPresent(),
+                        node -> paintNode(node, subtreeVisibility, underlyingCallbackMethods),
                         node -> {
                             if (node instanceof CallbackMethodNode) {
-                                toggleNodeVisibility((CallbackMethodNode) node, metadata);
+                                toggleNodeVisibility((CallbackMethodNode) node, subtreeVisibility);
                             }
                             panel.revalidate();
                             panel.repaint();
                         },
-                        node -> navigateTo(metadata.get(node.getName()).getCallbackMethod().get().getPsiElement()),
+                        node -> navigateTo(underlyingCallbackMethods.get(node.getName()).get().getPsiElement()),
                         node -> navigateTo(node.getResourceAcquisition().getPsiElement()),
                         node -> navigateTo(node.getResourceRelease().getPsiElement()),
                         node -> {
                             PsiMethod callbackMethodPsiElement =
                                     ServiceManager
                                             .getService(IActivityFileModifier.class)
-                                            .createAndAddCallbackMethod(activity.get().getPsiElement(), node.getName());
+                                            .createAndAddCallbackMethod(activity.getPsiElement(), node.getName());
 
-                            metadata
-                                    .get(node.getName())
-                                    .setCallbackMethod(
-                                            new CallbackMethod(
-                                                    callbackMethodPsiElement,
-                                                    new ArrayList<>(),
-                                                    new ArrayList<>()));
+                            underlyingCallbackMethods
+                                    .replace(
+                                            node.getName(),
+                                            Optional.of(
+                                                    new CallbackMethod(
+                                                            callbackMethodPsiElement,
+                                                            new ArrayList<>(),
+                                                            new ArrayList<>())));
 
                             navigateTo(callbackMethodPsiElement);
                         });
@@ -273,24 +270,17 @@ public class ActivityViewService implements IActivityViewService {
                 ContentFactory
                         .SERVICE
                         .getInstance()
-                        .createContent(
-                                panel,
-                                activity
-                                        .get()
-                                        .getPsiElement()
-                                        .getName(),
-                                false);
+                        .createContent(panel, activity.getPsiElement().getName(), false);
 
-        ActivityViewContents contents =
+        return
                 new ActivityViewContents(
-                        activity.get(),
+                        activity,
                         panel,
                         activityContent,
-                        calculatePsiFileDigest(activityFile),
+                        calculatePsiFileDigest(activity.getPsiElement().getContainingFile()),
                         graphRoot,
-                        metadata);
-
-        return Optional.of(contents);
+                        subtreeVisibility,
+                        underlyingCallbackMethods);
     }
 
     private String calculatePsiFileDigest(
@@ -308,9 +298,8 @@ public class ActivityViewService implements IActivityViewService {
     private CallbackMethodNode buildLifecycleGraph(
             PsiClass activityClass,
             List<CallbackMethod> callbackMethods,
-            HashMap<String, LifecycleNodeMetadata> metadata,
             Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
-            Consumer<CallbackMethodNode> paintNode,
+            Consumer<LifecycleNode> paintNode,
             Consumer<LifecycleNode> onNodeClicked,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<ResourceAcquisitionLifecycleNode> goToResourceAcquisition,
@@ -325,7 +314,6 @@ public class ActivityViewService implements IActivityViewService {
                         activityClass,
                         "onCreate",
                         callbackMethods,
-                        metadata,
                         nodeHasUnderlyingCallbackMethod,
                         paintNode,
                         onNodeClicked,
@@ -341,7 +329,6 @@ public class ActivityViewService implements IActivityViewService {
                         activityClass,
                         "onStart",
                         callbackMethods,
-                        metadata,
                         nodeHasUnderlyingCallbackMethod,
                         paintNode,
                         onNodeClicked,
@@ -357,7 +344,6 @@ public class ActivityViewService implements IActivityViewService {
                         activityClass,
                         "onResume",
                         callbackMethods,
-                        metadata,
                         nodeHasUnderlyingCallbackMethod,
                         paintNode,
                         onNodeClicked,
@@ -373,7 +359,6 @@ public class ActivityViewService implements IActivityViewService {
                         activityClass,
                         "onPause",
                         callbackMethods,
-                        metadata,
                         nodeHasUnderlyingCallbackMethod,
                         paintNode,
                         onNodeClicked,
@@ -389,7 +374,6 @@ public class ActivityViewService implements IActivityViewService {
                         activityClass,
                         "onStop",
                         callbackMethods,
-                        metadata,
                         nodeHasUnderlyingCallbackMethod,
                         paintNode,
                         onNodeClicked,
@@ -403,11 +387,8 @@ public class ActivityViewService implements IActivityViewService {
                 lifecycleNodeFactory.createCircularLifecycleNode(
                         activityClass,
                         onResume,
-                        callbackMethodNode ->
-                                metadata
-                                        .get(callbackMethodNode.getName())
-                                        .getCallbackMethod()
-                                        .isPresent(),
+                        nodeHasUnderlyingCallbackMethod,
+                        paintNode,
                         goToNode,
                         onAddCallbackMethod));
 
@@ -416,11 +397,8 @@ public class ActivityViewService implements IActivityViewService {
                 lifecycleNodeFactory.createCircularLifecycleNode(
                         activityClass,
                         onCreate,
-                        callbackMethodNode ->
-                                metadata
-                                        .get(callbackMethodNode.getName())
-                                        .getCallbackMethod()
-                                        .isPresent(),
+                        nodeHasUnderlyingCallbackMethod,
+                        paintNode,
                         goToNode,
                         onAddCallbackMethod));
 
@@ -431,7 +409,6 @@ public class ActivityViewService implements IActivityViewService {
                         activityClass,
                         "onRestart",
                         callbackMethods,
-                        metadata,
                         nodeHasUnderlyingCallbackMethod,
                         paintNode,
                         onNodeClicked,
@@ -445,11 +422,8 @@ public class ActivityViewService implements IActivityViewService {
                 lifecycleNodeFactory.createCircularLifecycleNode(
                         activityClass,
                         onStart,
-                        callbackMethodNode ->
-                                metadata
-                                        .get(callbackMethodNode.getName())
-                                        .getCallbackMethod()
-                                        .isPresent(),
+                        nodeHasUnderlyingCallbackMethod,
+                        paintNode,
                         goToNode,
                         onAddCallbackMethod));
 
@@ -458,7 +432,6 @@ public class ActivityViewService implements IActivityViewService {
                         activityClass,
                         "onDestroy",
                         callbackMethods,
-                        metadata,
                         nodeHasUnderlyingCallbackMethod,
                         paintNode,
                         onNodeClicked,
@@ -475,11 +448,8 @@ public class ActivityViewService implements IActivityViewService {
                 lifecycleNodeFactory.createCircularLifecycleNode(
                         activityClass,
                         onCreate,
-                        callbackMethodNode ->
-                                metadata
-                                        .get(callbackMethodNode.getName())
-                                        .getCallbackMethod()
-                                        .isPresent(),
+                        nodeHasUnderlyingCallbackMethod,
+                        paintNode,
                         goToNode,
                         onAddCallbackMethod));
 
@@ -490,9 +460,8 @@ public class ActivityViewService implements IActivityViewService {
             PsiClass activityClass,
             String callbackMethodName,
             List<CallbackMethod> callbackMethods,
-            HashMap<String, LifecycleNodeMetadata> metadata,
             Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
-            Consumer<CallbackMethodNode> paintNode,
+            Consumer<LifecycleNode> paintNode,
             Consumer<LifecycleNode> onNodeClicked,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<ResourceAcquisitionLifecycleNode> goToResourceAcquisition,
@@ -520,21 +489,131 @@ public class ActivityViewService implements IActivityViewService {
             for (ResourceAcquisition resourceAcquisition : handler.get().getResourceAcquisitions()) {
                 node.addNextNode(
                         lifecycleNodeFactory
-                                .createResourceAcquisitionLifecycleNode(resourceAcquisition, goToResourceAcquisition));
+                                .createResourceAcquisitionLifecycleNode(resourceAcquisition, paintNode, goToResourceAcquisition));
             }
 
             for (ResourceRelease resourceRelease : handler.get().getResourceReleases()) {
                 node.addNextNode(
                         lifecycleNodeFactory
-                                .createResourceReleaseLifecycleNode(resourceRelease, goToResourceRelease));
+                                .createResourceReleaseLifecycleNode(resourceRelease, paintNode, goToResourceRelease));
             }
         }
 
-        metadata.put(
-                callbackMethodName,
-                new LifecycleNodeMetadata(handler, false));
-
         return node;
+    }
+
+    private void paintNode(
+            LifecycleNode node,
+            HashMap<String, Boolean> subtreeVisibility,
+            HashMap<String, Optional<CallbackMethod>> underlyingCallbackMethods) {
+
+        node.setToolTipText(node.getName());
+
+        if (node instanceof CallbackMethodNode) {
+            CallbackMethodNode callbackMethodNode = (CallbackMethodNode) node;
+
+            callbackMethodNode.setIcon(
+                    new ImageIcon(getClass().getClassLoader().getResource("handler.png")));
+
+            if (underlyingCallbackMethods.get(node.getName()).isPresent()) {
+                node.setBackground(Color.YELLOW);
+            } else {
+                node.setBackground(null);
+            }
+
+            if (subtreeVisibility.get(callbackMethodNode.getName())) {
+                for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
+                    nextNode.setVisible(true);
+                }
+            } else {
+                for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
+                    nextNode.setVisible(false);
+                }
+            }
+
+        } else if (node instanceof CircularLifecycleNode) {
+            CircularLifecycleNode circularLifecycleNode = (CircularLifecycleNode) node;
+
+            circularLifecycleNode.setForeground(Color.GRAY);
+
+            circularLifecycleNode.setIcon(
+                    new ImageIcon(getClass().getClassLoader().getResource("circular_node.png")));
+
+        } else if (node instanceof ResourceAcquisitionLifecycleNode) {
+            ResourceAcquisitionLifecycleNode resourceAcquisitionLifecycleNode = (ResourceAcquisitionLifecycleNode) node;
+
+            resourceAcquisitionLifecycleNode.setIcon(
+                    new ImageIcon(getClass().getClassLoader().getResource("acquire.png")));
+
+        } else if (node instanceof ResourceReleaseLifecycleNode) {
+            ResourceReleaseLifecycleNode resourceReleaseLifecycleNode = (ResourceReleaseLifecycleNode) node;
+
+            resourceReleaseLifecycleNode.setIcon(
+                    new ImageIcon(getClass().getClassLoader().getResource("release.png")));
+        }
+    }
+
+    private HashMap<String, Boolean> getSubtreeVisibility(
+            Optional<HashMap<String, Boolean>> subtreeVisibility) {
+
+        HashMap<String, Boolean> result = new HashMap<>();
+
+        if (subtreeVisibility.isPresent()) {
+            result.put("onCreate", subtreeVisibility.get().getOrDefault("onCreate", false));
+            result.put("onStart", subtreeVisibility.get().getOrDefault("onStart", false));
+            result.put("onResume", subtreeVisibility.get().getOrDefault("onResume", false));
+            result.put("onPause", subtreeVisibility.get().getOrDefault("onPause", false));
+            result.put("onStop", subtreeVisibility.get().getOrDefault("onStop", false));
+            result.put("onRestart", subtreeVisibility.get().getOrDefault("onRestart", false));
+            result.put("onDestroy", subtreeVisibility.get().getOrDefault("onDestroy", false));
+        } else {
+            result.put("onCreate", false);
+            result.put("onStart", false);
+            result.put("onResume", false);
+            result.put("onPause", false);
+            result.put("onStop", false);
+            result.put("onRestart", false);
+            result.put("onDestroy", false);
+        }
+
+        return result;
+    }
+
+    private HashMap<String, Optional<CallbackMethod>> getUnderlyingCallbackMethods(
+            List<CallbackMethod> callbackMethods) {
+
+        HashMap<String, Optional<CallbackMethod>> underlyingCallbackMethods =
+                new HashMap<>();
+
+        underlyingCallbackMethods.put(
+                "onCreate",
+                findByName(callbackMethods, "onCreate"));
+
+        underlyingCallbackMethods.put(
+                "onStart",
+                findByName(callbackMethods, "onStart"));
+
+        underlyingCallbackMethods.put(
+                "onResume",
+                findByName(callbackMethods, "onResume"));
+
+        underlyingCallbackMethods.put(
+                "onPause",
+                findByName(callbackMethods, "onPause"));
+
+        underlyingCallbackMethods.put(
+                "onStop",
+                findByName(callbackMethods, "onStop"));
+
+        underlyingCallbackMethods.put(
+                "onRestart",
+                findByName(callbackMethods, "onRestart"));
+
+        underlyingCallbackMethods.put(
+                "onDestroy",
+                findByName(callbackMethods, "onDestroy"));
+
+        return underlyingCallbackMethods;
     }
 
     private Optional<CallbackMethod> findByName(
@@ -552,38 +631,31 @@ public class ActivityViewService implements IActivityViewService {
 
     private void toggleNodeVisibility(
             CallbackMethodNode node,
-            HashMap<String, LifecycleNodeMetadata> metadata) {
+            HashMap<String, Boolean> subtreeVisibility) {
 
-        LifecycleNodeMetadata nodeMetadata = metadata.get(node.getName());
-
-        Boolean subtreeVisible = nodeMetadata.isSubtreeVisible;
-
-        if (!subtreeVisible) {
+        if (!subtreeVisibility.get(node.getName())) {
             for (LifecycleNode nextNode : node.getNextNodes()) {
                 nextNode.setVisible(true);
             }
-            nodeMetadata.setIsSubtreeVisible(true);
+            subtreeVisibility.replace(node.getName(), true);
         } else {
             for (LifecycleNode nextNode : node.getNextNodes()) {
-                setNodeVisibility(nextNode, metadata, false);
+                setNodeVisibility(nextNode, false);
             }
-            nodeMetadata.setIsSubtreeVisible(false);
+            subtreeVisibility.replace(node.getName(), false);
         }
     }
 
     private void setNodeVisibility(
             LifecycleNode node,
-            HashMap<String, LifecycleNodeMetadata> metadata,
             Boolean visibility) {
 
         if (node instanceof CallbackMethodNode) {
             CallbackMethodNode callbackMethodNode = (CallbackMethodNode) node;
 
             for (LifecycleNode nextNode : callbackMethodNode.getNextNodes()) {
-                setNodeVisibility(nextNode, metadata, visibility);
+                setNodeVisibility(nextNode, visibility);
             }
-
-            metadata.get(node.getName()).setIsSubtreeVisible(false);
         }
 
         node.setVisible(visibility);
@@ -613,14 +685,16 @@ public class ActivityViewService implements IActivityViewService {
                 Content content,
                 String activityFileDigest,
                 CallbackMethodNode graphRoot,
-                HashMap<String, LifecycleNodeMetadata> lifecycleNodeMetadata) {
+                HashMap<String, Boolean> subtreeVisibility,
+                HashMap<String, Optional<CallbackMethod>> underlyingCallbackMethods) {
 
             this.activity = activity;
             this.panel = panel;
             this.content = content;
             this.activityFileDigest = activityFileDigest;
             this.graphRoot = graphRoot;
-            this.lifecycleNodeMetadata = lifecycleNodeMetadata;
+            this.subtreeVisibility = subtreeVisibility;
+            this.underlyingCallbackMethods = underlyingCallbackMethods;
         }
 
         private final Activity activity;
@@ -628,31 +702,7 @@ public class ActivityViewService implements IActivityViewService {
         private final Content content;
         private final String activityFileDigest;
         private final CallbackMethodNode graphRoot;
-        private final HashMap<String, LifecycleNodeMetadata> lifecycleNodeMetadata;
-    }
-
-    class LifecycleNodeMetadata {
-        LifecycleNodeMetadata(
-                Optional<CallbackMethod> callbackMethod,
-                Boolean isSubtreeVisible) {
-
-            this.callbackMethod = callbackMethod;
-            this.isSubtreeVisible = isSubtreeVisible;
-        }
-
-        public void setCallbackMethod(CallbackMethod value) {
-            callbackMethod = Optional.of(value);
-        }
-
-        public Optional<CallbackMethod> getCallbackMethod() {
-            return callbackMethod;
-        }
-
-        public void setIsSubtreeVisible(Boolean value) {
-            isSubtreeVisible = value;
-        }
-
-        private Optional<CallbackMethod> callbackMethod;
-        private Boolean isSubtreeVisible;
+        private final HashMap<String, Boolean> subtreeVisibility;
+        private final HashMap<String, Optional<CallbackMethod>> underlyingCallbackMethods;
     }
 }

@@ -2,15 +2,13 @@ package interfaces.graphics.dsvl.model;
 
 import impl.model.dstl.ResourceAcquisition;
 
-import javax.swing.*;
+import java.util.function.Consumer;
 
 public class ResourceAcquisitionLifecycleNode extends LifecycleNode {
-    public ResourceAcquisitionLifecycleNode(ResourceAcquisition resourceAcquisition) {
-
-        super(resourceAcquisition.getResourceName());
+    public ResourceAcquisitionLifecycleNode(Consumer<LifecycleNode> paintNode, ResourceAcquisition resourceAcquisition) {
+        super(paintNode, resourceAcquisition.getResourceName());
 
         this.resourceAcquisition = resourceAcquisition;
-        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("acquire.png")));
     }
 
     public ResourceAcquisition getResourceAcquisition() {

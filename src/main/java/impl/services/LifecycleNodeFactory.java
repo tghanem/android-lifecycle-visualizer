@@ -2,10 +2,7 @@ package impl.services;
 
 import com.intellij.psi.PsiClass;
 import com.intellij.util.Producer;
-import interfaces.graphics.dsvl.model.CircularLifecycleNode;
-import interfaces.graphics.dsvl.model.CallbackMethodNode;
-import interfaces.graphics.dsvl.model.ResourceAcquisitionLifecycleNode;
-import interfaces.graphics.dsvl.model.ResourceReleaseLifecycleNode;
+import interfaces.graphics.dsvl.model.*;
 import impl.model.dstl.*;
 import interfaces.graphics.dsvl.ILifecycleNodeFactory;
 
@@ -26,7 +23,7 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
             String callbackMethodName,
             Optional<CallbackMethod> callbackMethod,
             Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
-            Consumer<CallbackMethodNode> paintNode,
+            Consumer<LifecycleNode> paintNode,
             Consumer<CallbackMethodNode> onClick,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod) {
@@ -58,10 +55,11 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
             PsiClass ownerActivityClass,
             CallbackMethodNode targetCallbackMethodNode,
             Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
+            Consumer<LifecycleNode> paintNode,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod) {
 
-        CircularLifecycleNode node = new CircularLifecycleNode(targetCallbackMethodNode);
+        CircularLifecycleNode node = new CircularLifecycleNode(paintNode, targetCallbackMethodNode);
 
         attachToMouseRightClick(
                 () ->
@@ -78,10 +76,11 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
     @Override
     public ResourceAcquisitionLifecycleNode createResourceAcquisitionLifecycleNode(
             ResourceAcquisition resourceAcquisition,
+            Consumer<LifecycleNode> paintNode,
             Consumer<ResourceAcquisitionLifecycleNode> goToResource) {
 
         ResourceAcquisitionLifecycleNode resourceAcquisitionNode =
-                new ResourceAcquisitionLifecycleNode(resourceAcquisition);
+                new ResourceAcquisitionLifecycleNode(paintNode, resourceAcquisition);
 
         attachToMouseRightClick(
                 () -> {
@@ -97,10 +96,11 @@ public class LifecycleNodeFactory implements ILifecycleNodeFactory {
     @Override
     public ResourceReleaseLifecycleNode createResourceReleaseLifecycleNode(
             ResourceRelease resourceRelease,
+            Consumer<LifecycleNode> paintNode,
             Consumer<ResourceReleaseLifecycleNode> goToResource) {
 
         ResourceReleaseLifecycleNode resourceReleaseNode =
-                new ResourceReleaseLifecycleNode(resourceRelease);
+                new ResourceReleaseLifecycleNode(paintNode, resourceRelease);
 
         attachToMouseRightClick(
                 () -> {

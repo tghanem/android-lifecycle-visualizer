@@ -2,15 +2,13 @@ package interfaces.graphics.dsvl.model;
 
 import impl.model.dstl.ResourceRelease;
 
-import javax.swing.*;
+import java.util.function.Consumer;
 
 public class ResourceReleaseLifecycleNode extends LifecycleNode {
-    public ResourceReleaseLifecycleNode(ResourceRelease resourceRelease) {
-
-        super(resourceRelease.getResourceName());
+    public ResourceReleaseLifecycleNode(Consumer<LifecycleNode> paintNode, ResourceRelease resourceRelease) {
+        super(paintNode, resourceRelease.getResourceName());
 
         this.resourceRelease = resourceRelease;
-        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("release.png")));
     }
 
     public ResourceRelease getResourceRelease() {

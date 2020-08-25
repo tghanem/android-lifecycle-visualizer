@@ -1,10 +1,7 @@
 package interfaces.graphics.dsvl;
 
 import com.intellij.psi.PsiClass;
-import interfaces.graphics.dsvl.model.CircularLifecycleNode;
-import interfaces.graphics.dsvl.model.CallbackMethodNode;
-import interfaces.graphics.dsvl.model.ResourceAcquisitionLifecycleNode;
-import interfaces.graphics.dsvl.model.ResourceReleaseLifecycleNode;
+import interfaces.graphics.dsvl.model.*;
 import impl.model.dstl.CallbackMethod;
 import impl.model.dstl.ResourceAcquisition;
 import impl.model.dstl.ResourceRelease;
@@ -19,7 +16,7 @@ public interface ILifecycleNodeFactory {
             String callbackMethodName,
             Optional<CallbackMethod> callbackMethod,
             Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
-            Consumer<CallbackMethodNode> paintNode,
+            Consumer<LifecycleNode> paintNode,
             Consumer<CallbackMethodNode> onClick,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod);
@@ -28,14 +25,17 @@ public interface ILifecycleNodeFactory {
             PsiClass ownerActivityClass,
             CallbackMethodNode targetCallbackMethodNode,
             Function<CallbackMethodNode, Boolean> nodeHasUnderlyingCallbackMethod,
+            Consumer<LifecycleNode> paintNode,
             Consumer<CallbackMethodNode> goToNode,
             Consumer<CallbackMethodNode> onAddCallbackMethod);
 
     ResourceAcquisitionLifecycleNode createResourceAcquisitionLifecycleNode(
             ResourceAcquisition resourceAcquisition,
+            Consumer<LifecycleNode> paintNode,
             Consumer<ResourceAcquisitionLifecycleNode> goToResource);
 
     ResourceReleaseLifecycleNode createResourceReleaseLifecycleNode(
             ResourceRelease resourceRelease,
+            Consumer<LifecycleNode> paintNode,
             Consumer<ResourceReleaseLifecycleNode> goToResource);
 }

@@ -1,15 +1,12 @@
 package interfaces.graphics.dsvl.model;
 
-import javax.swing.*;
-import java.awt.*;
+import java.util.function.Consumer;
 
 public class CircularLifecycleNode extends LifecycleNode {
-    public CircularLifecycleNode(LifecycleNode target) {
-        super(target.getName());
+    public CircularLifecycleNode(Consumer<LifecycleNode> paintNode, LifecycleNode target) {
+        super(paintNode, target.getName());
 
         this.target = target;
-        this.setForeground(Color.GRAY);
-        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("circular_node.png")));
     }
 
     public LifecycleNode getTarget() {
@@ -17,4 +14,5 @@ public class CircularLifecycleNode extends LifecycleNode {
     }
 
     private final LifecycleNode target;
+
 }

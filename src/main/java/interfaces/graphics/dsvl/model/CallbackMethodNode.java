@@ -2,26 +2,15 @@ package interfaces.graphics.dsvl.model;
 
 import interfaces.consumers.LifecycleNodeConsumer;
 
-import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class CallbackMethodNode extends LifecycleNode {
-    public CallbackMethodNode(Consumer<CallbackMethodNode> paintNode, String name) {
-        super(name);
-        this.paintNode = paintNode;
+    public CallbackMethodNode(Consumer<LifecycleNode> paintNode, String name) {
+        super(paintNode, name);
 
         this.nextNodes = new ArrayList<>();
-        this.setVisible(false);
-        this.setIcon(new ImageIcon(getClass().getClassLoader().getResource("handler.png")));
-    }
-
-    @Override
-    protected void paintComponent(Graphics graphics) {
-        paintNode.accept(this);
-        super.paintComponent(graphics);
     }
 
     public List<LifecycleNode> getNextNodes() {
@@ -57,5 +46,4 @@ public class CallbackMethodNode extends LifecycleNode {
     }
 
     private final List<LifecycleNode> nextNodes;
-    private final Consumer<CallbackMethodNode> paintNode;
 }
